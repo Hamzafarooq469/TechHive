@@ -88,14 +88,21 @@ TechHive/
 - **MongoDB** (local or cloud instance)
 - **Redis** (optional, for queue management)
 - **Git**
+- **Git LFS** - Required for downloading ML model files
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
+   # Install Git LFS first (if not already installed)
+   git lfs install
+   
+   # Clone the repository (LFS files will be downloaded automatically)
    git clone https://github.com/Hamzafarooq469/TechHive.git
    cd TechHive
    ```
+   
+   **Note**: The sentiment analysis model (`model.safetensors`, 255 MB) is stored using Git LFS and will be automatically downloaded during clone.
 
 2. **Backend Setup**
    ```bash
@@ -254,8 +261,20 @@ Update `backend/services/Firebase/firebaseCredentials.json` with your Firebase c
 ⚠️ **Important**: 
 - Never commit `.env` files to the repository
 - Keep your API keys and credentials secure
-- The `model.safetensors` file (255 MB) is excluded from Git. Download it separately or retrain the sentiment analysis model
 - Update Firebase credentials in `firebaseCredentials.json` before deploying
+- Large model files are managed via Git LFS (included in repository)
+
+## 📦 Large Files & Git LFS
+
+This project uses **Git LFS** (Large File Storage) for managing large ML model files:
+- `Services/MLServices/model.safetensors` (255 MB) - Sentiment analysis model
+- Files matching `*.safetensors` are automatically tracked by LFS
+
+Git LFS is automatically configured when you clone the repository. If you need to manually set it up:
+```bash
+git lfs install
+git lfs pull  # Download LFS files if not already present
+```
 
 ## 📝 License
 

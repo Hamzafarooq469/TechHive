@@ -1,3 +1,6 @@
+# TechHive .gitignore
+# Large files (*.safetensors) are tracked via Git LFS - see .gitattributes
+
 # Dependencies
 node_modules/
 __pycache__/
@@ -77,15 +80,11 @@ Desktop.ini
 *.bak
 *.cache
 
-# Model files (if large)
+# Model files (other large models - .safetensors tracked via Git LFS)
 *.joblib
 *.pkl
 *.h5
 *.pth
-
-# Config files with sensitive data (adjust as needed)
-config/config.json
-config/db.js
 
 # Upload directories (if they contain user uploads)
 uploads/
