@@ -82,7 +82,6 @@ Desktop.ini
 *.pkl
 *.h5
 *.pth
-*.safetensors
 
 # Config files with sensitive data (adjust as needed)
 config/config.json
