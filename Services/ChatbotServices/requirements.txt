@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+langchain
+langchain-openai
+langgraph
+pymongo
+python-dotenv
+pydantic
+requests
+numpy
+faiss-cpu

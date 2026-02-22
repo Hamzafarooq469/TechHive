@@ -1,0 +1,106 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+*.local
+
+# IDE and Editor files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*~
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# Python eggs
+*.egg-info/
+*.egg
+.eggs/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.cache
+
+# Model files (if large)
+*.joblib
+*.pkl
+*.h5
+*.pth
+*.safetensors
+
+# Config files with sensitive data (adjust as needed)
+config/config.json
+config/db.js
+
+# Upload directories (if they contain user uploads)
+uploads/
+temp/
+
+# Redis dump
+dump.rdb
+
+# Coverage reports
+coverage/
+*.coverage
+.nyc_output/
+
+# Package manager lock files (optional - uncomment if you want to ignore them)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml

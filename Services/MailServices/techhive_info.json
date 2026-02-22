@@ -1,0 +1,64 @@
+{
+  "company_info": {
+    "name": "TechHive",
+    "tagline": "Your Premium Tech Destination",
+    "description": "TechHive is Pakistan's leading e-commerce platform for authentic tech products, offering laptops, smartphones, gaming consoles, accessories, and more.",
+    "founded": "2023",
+    "mission": "To provide genuine tech products with exceptional customer service and competitive prices."
+  },
+  "contact_info": {
+    "customer_support_email": "support@techhive.com",
+    "sales_email": "sales@techhive.com",
+    "business_email": "info@techhive.com",
+    "phone_number": "+92-300-1234567",
+    "whatsapp": "+92-300-1234567",
+    "whatsapp_link": "https://wa.me/923001234567",
+    "business_hours": "Monday - Saturday: 9:00 AM - 8:00 PM (PKT)",
+    "weekend": "Sunday: 10:00 AM - 6:00 PM (PKT)"
+  },
+  "online_presence": {
+    "website": "https://www.techhive.com",
+    "facebook": "https://www.facebook.com/techhive",
+    "instagram": "https://www.instagram.com/techhive",
+    "twitter": "https://www.twitter.com/techhive",
+    "linkedin": "https://www.linkedin.com/company/techhive"
+  },
+  "physical_address": {
+    "street": "123 Tech Plaza, F-7 Markaz",
+    "city": "Islamabad",
+    "country": "Pakistan",
+    "postal_code": "44000"
+  },
+  "policies": {
+    "return_policy": "30-day return policy on most products. Items must be unused and in original packaging.",
+    "warranty": "All products come with manufacturer warranty. Extended warranty available on select items.",
+    "shipping": "Free shipping on orders over Rs. 5,000. Standard delivery within 3-5 business days.",
+    "payment_methods": "Cash on Delivery, Credit/Debit Cards, JazzCash, EasyPaisa, Bank Transfer"
+  },
+  "email_footer": {
+    "unsubscribe_text": "Don't want to receive these emails?",
+    "unsubscribe_link": "https://www.techhive.com/unsubscribe",
+    "privacy_policy_link": "https://www.techhive.com/privacy-policy",
+    "terms_link": "https://www.techhive.com/terms-of-service",
+    "disclaimer": "This email was sent to you because you are a valued TechHive customer. Please add support@techhive.com to your address book to ensure delivery."
+  },
+  "popular_categories": [
+    "Laptops & Computers",
+    "Smartphones & Tablets",
+    "Gaming Consoles & Accessories",
+    "Smartwatches & Wearables",
+    "Audio & Headphones",
+    "Cameras & Photography",
+    "Computer Accessories",
+    "Mobile Accessories"
+  ],
+  "key_features": [
+    "100% Authentic Products",
+    "Competitive Pricing",
+    "Fast & Reliable Delivery",
+    "Secure Payment Options",
+    "24/7 Customer Support",
+    "Easy Returns & Exchanges",
+    "Nationwide Coverage"
+  ]
+}

@@ -1,0 +1,766 @@
+{
+  "navbar": {
+    "home": "Inicio",
+    "products": "Productos",
+    "trackOrder": "Rastrear Pedido",
+    "contact": "Contacto",
+    "about": "Sobre Nosotros",
+    "cart": "Carrito",
+    "adminDashboard": "Panel de Administración",
+    "customerSupport": "Atención al Cliente"
+  },
+  "auth": {
+    "signIn": "Iniciar Sesión",
+    "signUp": "Registrarse",
+    "logout": "Cerrar Sesión"
+  },
+"cart": {
+  "addToCart": "Agregar al carrito",
+  "removeFromCart": "Eliminar del carrito",
+  "item": "Artículo",
+  "items": "Artículos",
+  "quantity": "Cantidad",
+  "increase": "Aumentar",
+  "decrease": "Disminuir",
+  "checkout": "Proceder al pago",
+  "emptyCart": "Tu carrito está vacío.",
+  "title": "Carrito de Compras",
+  "price": "Precio",
+  "inStock": "En stock",
+  "delete": "Eliminar",
+  "subtotal": "Subtotal",
+  "shopDeals": "Ver ofertas de hoy",
+  "cartCleared": "Carrito vaciado",
+  "itemRemoved": "Artículo eliminado del carrito",
+  "quantityIncreased": "Cantidad aumentada",
+  "quantityDecreased": "Cantidad reducida",
+  "cartEmptyError": "¡Tu carrito está vacío!"
+},
+  "order": {
+    "trackYourOrder": "Rastrea tu pedido",
+    "orderNow": "Ordenar ahora",
+    "orderId": "ID del Pedido",
+    "status": "Estado",
+    "pending": "Pendiente",
+    "shipped": "Enviado",
+    "delivered": "Entregado"
+  },
+      "orderSummary": {
+      "loading": "Cargando los detalles de tu pedido...",
+      "noOrder": "No se encontró ningún pedido.",
+      "loadError": "No se pudieron cargar los detalles del pedido.",
+      "trackingCopied": "¡Número de seguimiento copiado!",
+      "thankYou": "¡Gracias por tu pedido!",
+      "confirmationSent": "Te hemos enviado un correo electrónico con los detalles del pedido.",
+      "orderSummary": "Resumen del pedido",
+      "orderDetails": "Detalles del pedido",
+      "status": "Estado del pedido",
+      "orderNumber": "Número de pedido",
+      "trackingNumber": "Número de seguimiento",
+      "copy": "Copiar",
+      "estDelivery": "Entrega estimada",
+      "deliveryTime": "3-5 días hábiles",
+      "paymentSummary": "Resumen de pago",
+      "totalAmount": "Monto total",
+      "orderItems": "Artículos del pedido",
+      "quantity": "Cantidad",
+      "continueShopping": "Seguir comprando",
+      "trackOrder": "Rastrear tu pedido"
+    },
+    "trackOrder": {
+    "title": "Rastrea tu pedido",
+    "subtitle": "Ingresa tu número de seguimiento para verificar el estado del pedido",
+    "placeholder": "Ingresa tu número de seguimiento (ej. TH-12345678)",
+    "button": "Rastrear Pedido",
+    "tracking": "Rastreando...",
+    "success": "¡Pedido encontrado!",
+    "order": "Pedido",
+    "errors": {
+      "noTracking": "¡Por favor ingresa un número de seguimiento!",
+      "notFound": "Pedido no encontrado o número de seguimiento inválido."
+    },
+    "steps": {
+      "placed": "Pedido Realizado",
+      "confirmed": "Confirmado",
+      "shipped": "Enviado",
+      "delivered": "Entregado"
+    },
+    "trackingNumber": "Número de Seguimiento",
+    "deliveredOn": "Entregado el",
+    "cancelledOn": "Cancelado el",
+    "estimatedDelivery": "Entrega Estimada",
+    "expectedDelivery": "Entrega Esperada",
+    "defaultDelivery": "3-5 días hábiles",
+    "delayedDateNote": "Retrasado - Nueva fecha será actualizada pronto",
+    "delayedMessage": "Tu pedido ha sido retrasado. Estamos trabajando para entregarlo lo antes posible.",
+    "cancelledMessage": "Tu pedido ha sido cancelado. Contacta al soporte si tienes preguntas.",
+    "delayedApology": "Tu pedido está retrasado. Pedimos disculpas por las molestias.",
+    "cancelledNote": "Este pedido ha sido cancelado."
+  },
+
+  "product": {
+    "price": "Precio",
+    "inStock": "Disponible",
+    "unavailable": "Actualmente no disponible",
+    "category": "Categoría",
+    "addToCart": "Agregar al carrito",
+    "outOfStock": "Agotado"
+  },
+
+  "toasts": {
+    "addedToCart": "¡Artículo añadido al carrito!",
+    "removedFromCart": "Artículo eliminado del carrito.",
+    "error": "Algo salió mal. Inténtalo de nuevo."
+  },
+  "footer": {
+    "logo": "🛒 TechHive Pakistán",
+    "description": "Tu socio de confianza en electrónica en Pakistán. Entrega rápida, pago seguro y servicio centrado en el cliente desde 2018.",
+    "quickLinks": "Enlaces Rápidos",
+    "home": "Inicio",
+    "products": "Productos",
+    "aboutUs": "Sobre Nosotros",
+    "support": "Soporte",
+    "faq": "Preguntas Frecuentes",
+    "returnsPolicy": "Política de Devoluciones",
+    "helpCenter": "Centro de Ayuda",
+    "contactUs": "Contáctanos",
+    "phone": "+92 51 1234567",
+    "email": "support@techhivepk.com",
+    "address": "Mercado Comercial, Rawalpindi, Pakistán",
+    "copyright": "© {{year}} TechHive Pakistán. Todos los derechos reservados.",
+    "privacyPolicy": "Política de Privacidad",
+    "termsOfService": "Términos del Servicio"
+  },
+  "shipping": {
+    "title": "Agregar información de envío",
+    "fullName": "Nombre completo",
+    "address": "Dirección",
+    "city": "Ciudad",
+    "postalCode": "Código postal",
+    "country": "País",
+    "button": "Guardar información de envío",
+    "saving": "Guardando...",
+    "successMessage": "¡Envío guardado! Redirigiendo en 1 segundo...",
+    "selectShippingAddress": "Selecciona una dirección de envío",
+    "selectedShippingAddress": "Dirección de envío seleccionada",
+    "selectedAddress": "Selected",
+    "placeholder": {
+      "fullName": "Ingresa tu nombre completo",
+      "address": "Ingresa tu dirección",
+      "city": "Ingresa tu ciudad",
+      "postalCode": "Ingresa código postal",
+      "country": "Ingresa tu país"
+    }
+  },
+  "forgotPassword": {
+    "title": "¿Olvidaste tu contraseña?",
+    "emailPlaceholder": "Ingresa tu correo electrónico",
+    "button": "Enviar enlace de restablecimiento",
+    "success": "Enlace enviado a {{email}}",
+    "error": "Error: {{message}}"
+  },
+  "signIn": {
+    "title": "Inicia sesión en TechHive",
+    "emailPlaceholder": "Correo electrónico",
+    "passwordPlaceholder": "Contraseña",
+    "button": "Iniciar Sesión",
+    "google": "Iniciar con Google",
+    "or": "O",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "newUser": "¿Nuevo en TechHive?",
+    "linkToSignUp": "Regístrate",
+    "errors": {
+      "invalid": "Correo o contraseña incorrecta",
+      "unsuccessful": "Error al iniciar sesión"
+    },
+    "success": "¡Bienvenido de nuevo, {{name}}!"
+  },
+  "signUp": {
+    "title": "Crear una cuenta",
+    "namePlaceholder": "Nombre completo",
+    "emailPlaceholder": "Correo electrónico",
+    "passwordPlaceholder": "Contraseña (mínimo 6 caracteres)",
+    "button": "Registrarse",
+    "google": "Registrarse con Google",
+    "or": "O",
+    "errors": {
+      "required": "Completa todos los campos.",
+      "shortPassword": "La contraseña debe tener al menos 6 caracteres.",
+      "emailUsed": "Correo ya en uso.",
+      "failed": "Registro fallido: {{message}}"
+    },
+    "success": "¡Cuenta creada! Bienvenido 🎉",
+    "googleSuccess": "¡Registrado con Google correctamente!",
+    "googleFailed": "Fallo al registrarse con Google: {{message}}"
+  },
+  "signOut": {
+    "success": "Sesión cerrada con éxito",
+    "error": "Error al cerrar sesión: {{message}}"
+  },
+  "about": {
+    "title": "Acerca de TechHive Pakistán",
+    "subtitle": "Tu socio de confianza en electrónica en Rawalpindi, conectando tecnología con hogares pakistaníes desde 2024",
+    "ourStory": {
+      "title": "Nuestra Historia",
+      "paragraph1": "Fundada en el corazón de Rawalpindi, Pakistán en 2024, TechHive Pakistán comenzó como un sueño para cerrar la brecha entre la tecnología de vanguardia y los consumidores pakistaníes cotidianos. Lo que comenzó como una pequeña tienda de electrónica en el Mercado Comercial se ha convertido en uno de los minoristas de electrónica en línea más confiables de Pakistán.",
+      "paragraph2": "Nuestro viaje comenzó cuando nuestro fundador, un ingeniero de software de la Universidad Iqra Islamabad, notó los desafíos que enfrentaban los consumidores pakistaníes al intentar acceder a electrónica genuina y de alta calidad a precios justos. Las largas colas en las tiendas físicas, la disponibilidad limitada de productos, las preocupaciones sobre la autenticidad y la falta de soporte postventa adecuado eran frustraciones comunes.",
+      "paragraph3": "Reconocimos que el creciente panorama digital de Pakistán necesitaba un socio de electrónica confiable: uno que entendiera las necesidades locales, ofreciera productos genuinos, proporcionara un excelente servicio al cliente tanto en urdu como en inglés, y entregara en todo el país con cuidado y precisión.",
+      "paragraph4": "Hoy, desde nuestra sede en Rawalpindi y nuestros centros de cumplimiento en Punjab, servimos a clientes desde Karachi hasta Gilgit, desde Lahore hasta Quetta. Hemos entregado exitosamente más de 50,000 pedidos y construido una comunidad de clientes satisfechos que confían en nosotros con sus necesidades tecnológicas."
+    },
+    "coreValues": {
+      "title": "Nuestros Valores Fundamentales",
+      "authenticity": {
+        "title": "Autenticidad Garantizada",
+        "description": "Cada producto que vendemos viene con una garantía de autenticidad. Trabajamos directamente con distribuidores autorizados y mantenemos un estricto control de calidad para asegurar que recibas solo electrónica genuina."
+      },
+      "delivery": {
+        "title": "Entrega Nacional",
+        "description": "Desde Islamabad hasta Karachi, Lahore hasta Peshawar - entregamos en todo Pakistán con nuestra red logística confiable. Entrega rápida, segura y rastreable a tu puerta."
+      },
+      "support": {
+        "title": "Soporte Local",
+        "description": "Nuestro equipo de soporte al cliente pakistaní entiende tus necesidades y habla tu idioma. Obtén ayuda en urdu, inglés o punjabi - estamos aquí para asistirte en cada paso."
+      },
+      "prices": {
+        "title": "Mejores Precios",
+        "description": "Negociamos directamente con proveedores para ofrecer precios competitivos. Ventas regulares, descuentos para estudiantes y opciones de compra al por mayor aseguran que obtengas el mejor valor por tu dinero."
+      },
+      "afterSales": {
+        "title": "Servicio Postventa",
+        "description": "Nuestra relación no termina en la entrega. Proporcionamos soporte de garantía integral, servicios de reparación y asistencia técnica a través de nuestros centros de servicio certificados."
+      },
+      "technology": {
+        "title": "Tecnología Más Reciente",
+        "description": "Mantente adelante con los últimos gadgets y electrónica. Actualizamos continuamente nuestro inventario con productos de vanguardia de marcas internacionales y locales líderes."
+      }
+    },
+    "impact": {
+      "title": "Nuestro Impacto en Números",
+      "ordersDelivered": "Pedidos Entregados",
+      "happyCustomers": "Clientes Felices",
+      "productVarieties": "Variedades de Productos",
+      "citiesCovered": "Ciudades Cubiertas",
+      "customerSupport": "Soporte al Cliente",
+      "customerSatisfaction": "Satisfacción del Cliente"
+    },
+    "whatWeOffer": {
+      "title": "Lo que Ofrecemos",
+      "intro": "Nuestro extenso catálogo de electrónica cubre todo lo que necesitas para mantenerte conectado, entretenido y productivo en el mundo digital de hoy:",
+      "mobilePhones": "Teléfonos Móviles y Accesorios: Últimos smartphones de Samsung, Apple, Huawei, Xiaomi, Oppo, Vivo y marcas locales como QMobile. Gama completa de fundas, cargadores, power banks y accesorios móviles.",
+      "computers": "Computadoras y Laptops: Laptops para gaming, laptops de negocios, computadoras de escritorio, tablets y todos los accesorios informáticos. Tenemos productos de HP, Dell, Lenovo, Acer y Asus con soporte de garantía local.",
+      "appliances": "Electrodomésticos: Smart TVs, refrigeradores, lavadoras, aires acondicionados, electrodomésticos de cocina de marcas confiables como Haier, PEL, Dawlance, Samsung y LG.",
+      "gaming": "Gaming y Entretenimiento: Consolas de gaming, accesorios de gaming, auriculares, altavoces, sistemas de home theater y dispositivos de streaming para la experiencia de entretenimiento definitiva.",
+      "smartHome": "Hogar Inteligente e IoT: Altavoces inteligentes, cámaras de seguridad, bombillas inteligentes, dispositivos de automatización del hogar y todo lo que necesitas para crear un hogar conectado."
+    },
+    "team": {
+      "title": "Nuestro Equipo",
+      "paragraph1": "Detrás de TechHive Pakistán hay un equipo dedicado de entusiastas de la tecnología, expertos en servicio al cliente y profesionales de logística que comparten un objetivo común: hacer la tecnología accesible para todos los hogares pakistaníes.",
+      "paragraph2": "Nuestro equipo incluye ingenieros de electrónica experimentados que curan nuestra selección de productos, asegurando que cada artículo cumpla con nuestros estándares de calidad. Nuestros representantes de servicio al cliente están entrenados no solo en conocimiento de productos sino en entender las diversas necesidades de los consumidores pakistaníes en diferentes regiones y antecedentes.",
+      "paragraph3": "Desde nuestro personal de almacén en Rawalpindi que empaca cuidadosamente cada pedido, hasta nuestros socios de entrega en todo el país que aseguran la llegada segura, cada miembro del equipo juega un papel crucial en tu experiencia de compra.",
+      "paragraph4": "Estamos orgullosos de ser una empresa pakistaní, empleando talento local y contribuyendo al creciente ecosistema de comercio electrónico del país. Nuestro equipo refleja la diversidad de Pakistán - tenemos miembros del personal de Punjab, Sindh, KPK, Baluchistán y Cachemira, trayendo perspectivas únicas e insights regionales para servir mejor a nuestros clientes."
+    },
+    "commitment": {
+      "title": "Nuestro Compromiso con Pakistán",
+      "paragraph1": "Como empresa pakistaní, estamos comprometidos a contribuir a la transformación digital de nuestra nación. Creemos que el acceso a electrónica de calidad no debería estar limitado por barreras geográficas o económicas.",
+      "paragraph2": "Apoyamos a las empresas locales asociándonos con proveedores pakistaníes cuando sea posible, proporcionamos oportunidades de empleo en el sector tecnológico y contribuimos al desarrollo de la infraestructura de comercio electrónico en Pakistán.",
+      "paragraph3": "Nuestra visión va más allá de solo vender electrónica - queremos ser parte del viaje de Pakistán hacia convertirse en una nación digitalmente empoderada donde la tecnología mejora cada aspecto de la vida.",
+      "cta": "Compra con Confianza"
+    },
+    "contact": {
+      "title": "Ponte en Contacto",
+      "intro": "¡Nos encantaría saber de ti! Contáctanos a través de cualquiera de los siguientes canales:",
+      "headOffice": "Oficina Principal",
+      "customerSupport": "Soporte al Cliente",
+      "emailUs": "Envíanos un Email",
+      "businessHours": "Horario de Atención",
+      "address": "Mercado Comercial, Saddar<br />Rawalpindi, Punjab<br />Pakistán",
+      "phone": "+92-51-XXXXXXX<br />Disponible 24/7<br />Soporte en Urdu e Inglés",
+      "emails": "support@TechHivepk.com<br />sales@TechHivepk.com<br />info@TechHivepk.com",
+      "hours": "Lunes - Sábado: 9 AM - 9 PM<br />Domingo: 10 AM - 6 PM<br />En línea: 24/7"
+    }
+  },
+  "faq": {
+    "title": "Preguntas Frecuentes",
+    "subtitle": "Encuentra respuestas a preguntas comunes sobre nuestros productos, servicios y políticas",
+    "searchPlaceholder": "Buscar FAQs...",
+    "categories": {
+      "all": "Todas las Categorías",
+      "shipping": "🚚 Envío y Entrega",
+      "returns": "🔄 Devoluciones y Reembolsos",
+      "orders": "📦 Pedidos",
+      "products": "🔌 Productos",
+      "account": "👤 Cuenta",
+      "payments": "💳 Pagos"
+    },
+    "questions": {
+      "shippingTime": {
+        "question": "¿Cuánto tiempo toma el envío estándar?",
+        "answer": "El envío estándar típicamente toma 3-5 días hábiles dentro de Pakistán. Para pedidos internacionales, los tiempos de entrega varían entre 7-14 días hábiles dependiendo del destino.",
+        "links": [
+          { "text": "Ver tarifas de envío", "url": "/shipping" },
+          { "text": "Rastrear tu pedido", "url": "/track-order" }
+        ]
+      },
+      "returns": {
+        "question": "¿Puedo devolver un producto si cambio de opinión?",
+        "answer": "Sí, ofrecemos una política de devolución de 30 días para la mayoría de artículos. El producto debe estar sin usar, en su empaque original con todas las etiquetas adjuntas. Algunas exclusiones aplican para electrónica y artículos de cuidado personal.",
+        "links": [
+          { "text": "Detalles de política de devolución", "url": "/returns" },
+          { "text": "Iniciar devolución", "url": "/start-return" }
+        ]
+      },
+      "trackOrder": {
+        "question": "¿Cómo rastreo mi pedido?",
+        "answer": "Una vez que tu pedido se envíe, recibirás un número de seguimiento por email. Puedes ingresar este número en nuestra página 'Rastrear Pedido' o directamente en el sitio web del courier para actualizaciones en tiempo real.",
+        "links": [
+          { "text": "Rastrear tu pedido", "url": "/track-order" }
+        ]
+      },
+      "authenticity": {
+        "question": "¿Son sus productos genuinos/originales?",
+        "answer": "¡Absolutamente! Obtenemos todos los productos directamente de distribuidores y fabricantes autorizados. Cada artículo viene con garantía oficial y garantía de autenticidad."
+      },
+      "paymentMethods": {
+        "question": "¿Qué métodos de pago aceptan?",
+        "answer": "Aceptamos todas las tarjetas de crédito/débito principales (Visa, MasterCard), transferencias bancarias, efectivo contra entrega (dentro de Pakistán) y billeteras digitales populares como JazzCash y EasyPaisa."
+      },
+      "resetPassword": {
+        "question": "¿Cómo restablezco la contraseña de mi cuenta?",
+        "answer": "Visita la página de inicio de sesión y haz clic en '¿Olvidaste tu contraseña?'. Ingresa tu dirección de email registrada para recibir un enlace de restablecimiento de contraseña. El enlace expira en 24 horas por seguridad.",
+        "links": [
+          { "text": "Página de restablecimiento de contraseña", "url": "/reset-password" }
+        ]
+      },
+      "internationalShipping": {
+        "question": "¿Ofrecen envío internacional?",
+        "answer": "Sí, enviamos a más de 50 países en todo el mundo. Los costos de envío y tiempos de entrega varían según el destino. Verás los costos de envío calculados en el checkout antes del pago.",
+        "links": [
+          { "text": "Información de envío internacional", "url": "/international-shipping" }
+        ]
+      },
+      "warranty": {
+        "question": "¿Cuál es su política de garantía?",
+        "answer": "La mayoría de electrónica viene con garantía del fabricante de 1 año. Las reclamaciones de garantía deben incluir prueba de compra. Algunos artículos tienen opciones de garantía extendida disponibles en el checkout.",
+        "links": [
+          { "text": "Información de garantía", "url": "/warranty" }
+        ]
+      }
+    },
+    "noResults": "No se encontraron FAQs que coincidan con tu búsqueda. Intenta diferentes palabras clave o categorías.",
+    "resetFilters": "Restablecer Filtros",
+    "support": {
+      "title": "¿Aún tienes preguntas?",
+      "subtitle": "Nuestro equipo de soporte al cliente está listo para ayudar",
+      "contactSupport": "Contactar Soporte",
+      "callNow": "Llamar Ahora: +92-51-XXXXXXX"
+    }
+  },
+  "returnsPolicy": {
+    "title": "Política de Devoluciones y Reembolsos",
+    "subtitle": "Nuestro proceso de devolución sin complicaciones asegura tu completa satisfacción con cada compra",
+    "policy": {
+      "title": "Nuestra Política de Devolución",
+      "paragraph1": "En TechHive Pakistán, respaldamos la calidad de nuestros productos. Si no estás completamente satisfecho con tu compra, ofrecemos una política de devolución de 30 días para la mayoría de artículos.",
+      "paragraph2": "Nuestra política está diseñada para ser simple y amigable con el cliente. Ya sea que recibiste un producto defectuoso, cambiaste de opinión, o ordenaste el artículo incorrecto, trabajaremos contigo para solucionarlo.",
+      "highlights": {
+        "title": "Aspectos Destacados de la Política:",
+        "items": [
+          "Ventana de devolución de 30 días para la mayoría de productos",
+          "Devoluciones gratuitas para artículos defectuosos o incorrectos",
+          "Opciones de reembolso completo o intercambio",
+          "Portal de devoluciones dedicado para procesamiento fácil",
+          "Promedio de 3-5 días hábiles para procesamiento de reembolso"
+        ]
+      }
+    },
+    "process": {
+      "title": "Cómo Devolver un Artículo",
+      "steps": {
+        "initiate": {
+          "title": "Inicia tu Devolución",
+          "description": "Inicia sesión en tu cuenta y visita nuestro Centro de Devoluciones o contacta a nuestro equipo de servicio al cliente para comenzar tu devolución."
+        },
+        "package": {
+          "title": "Empaca tu Artículo",
+          "description": "Empaca de forma segura el artículo en su empaque original con todos los accesorios e incluye el formulario de autorización de devolución."
+        },
+        "ship": {
+          "title": "Envíalo de Vuelta",
+          "description": "Usa la etiqueta de devolución prepagada (si aplica) o envía a nuestro centro de devoluciones. Recomendamos usar un servicio rastreable."
+        },
+        "refund": {
+          "title": "Recibe el Reembolso",
+          "description": "Una vez recibido e inspeccionado, procesaremos tu reembolso al método de pago original dentro de 3-5 días hábiles."
+        }
+      }
+    },
+    "conditions": {
+      "title": "Condiciones y Excepciones",
+      "intro": "Para ser elegible para una devolución, tu artículo debe estar en la misma condición en que lo recibiste, con empaque original y etiquetas adjuntas. Algunos artículos tienen condiciones de devolución especiales:",
+      "categories": {
+        "electronics": {
+          "title": "Electrónica",
+          "description": "Debe devolverse dentro de 15 días. Los sellos de fábrica deben estar intactos. Puede aplicar tarifa de reposición."
+        },
+        "software": {
+          "title": "Software y Medios",
+          "description": "Solo elegible si no está abierto. No hay devoluciones en productos descargados o activados."
+        },
+        "personalCare": {
+          "title": "Cuidado Personal",
+          "description": "No reembolsable por razones de higiene a menos que esté defectuoso."
+        },
+        "customOrders": {
+          "title": "Pedidos Personalizados",
+          "description": "Venta final - no elegible para devolución a menos que esté defectuoso."
+        }
+      },
+      "notice": "Nota: Nos reservamos el derecho de rechazar devoluciones que no cumplan con las condiciones de nuestra política o muestren signos de mal uso."
+    },
+    "faq": {
+      "title": "FAQ de Devoluciones",
+      "questions": {
+        "refundTime": {
+          "question": "¿Cuánto tiempo toma procesar mi reembolso?",
+          "answer": "Una vez que recibamos tu devolución, los reembolsos típicamente se procesan dentro de 3-5 días hábiles. El tiempo que toma para que el crédito aparezca en tu cuenta depende de tu banco o emisor de tarjeta."
+        },
+        "damaged": {
+          "question": "¿Qué pasa si mi artículo está dañado o defectuoso?",
+          "answer": "Cubriremos el envío de devolución y procesaremos un reembolso completo o reemplazo. Por favor contáctanos inmediatamente e incluye fotos del daño."
+        },
+        "exchange": {
+          "question": "¿Puedo intercambiar un artículo en lugar de devolverlo?",
+          "answer": "¡Sí! Visita nuestro Centro de Devoluciones para solicitar un intercambio. Solo pagarás la diferencia si el nuevo artículo cuesta más."
+        },
+        "shipping": {
+          "question": "¿Quién paga el envío de devolución?",
+          "answer": "Proporcionamos etiquetas de devolución gratuitas para artículos defectuosos/incorrectos. Para otras devoluciones, los clientes son responsables del envío de devolución a menos que hayas seleccionado nuestra Protección Premium en el checkout."
+        }
+      },
+      "cta": "¿Necesitas Ayuda? Contáctanos"
+    }
+  },
+  "helpCenter": {
+    "title": "Centro de Ayuda",
+    "subtitle": "Encuentra respuestas, guías y consejos de solución de problemas para todas tus necesidades tecnológicas",
+    "searchPlaceholder": "Buscar artículos de ayuda, guías y videos...",
+    "categories": {
+      "title": "Navegar por Categoría",
+      "all": "Todos los Recursos",
+      "setup": "Guías de Configuración",
+      "troubleshooting": "Solución de Problemas",
+      "maintenance": "Mantenimiento",
+      "warranty": "Información de Garantía",
+      "returns": "Devoluciones"
+    },
+    "resources": {
+      "title": "Todos los Recursos",
+      "setupTitle": "Recursos de Guías de Configuración",
+      "troubleshootingTitle": "Recursos de Solución de Problemas",
+      "maintenanceTitle": "Recursos de Mantenimiento",
+      "warrantyTitle": "Recursos de Información de Garantía",
+      "returnsTitle": "Recursos de Devoluciones",
+      "noResults": "No se encontraron recursos que coincidan con tu búsqueda. Intenta diferentes palabras clave o categorías.",
+      "viewGuide": "Ver guía",
+      "viewVideo": "Ver video",
+      "viewArticle": "Ver artículo"
+    },
+    "support": {
+      "title": "¿Aún Necesitas Ayuda?",
+      "liveChat": {
+        "title": "Chat en Vivo",
+        "description": "Conéctate instantáneamente con nuestro equipo de soporte",
+        "action": "Iniciar Chat"
+      },
+      "phoneSupport": {
+        "title": "Soporte Telefónico",
+        "description": "Llámanos al +92-51-XXXXXXX",
+        "action": "Llamar Ahora"
+      },
+      "submitTicket": {
+        "title": "Enviar un Ticket",
+        "description": "Responderemos dentro de 24 horas",
+        "action": "Crear Ticket"
+      }
+    },
+    "articles": {
+      "smartphoneSetup": "Cómo Configurar tu Smartphone",
+      "wifiTroubleshooting": "Solución de Problemas de Conectividad Wi-Fi",
+      "laptopBatteryCare": "Guía de Cuidado de Batería de Laptop",
+      "warrantyClaim": "Cómo Reclamar tu Garantía",
+      "bluetoothSetup": "Conectar Dispositivos Bluetooth",
+      "returnPolicies": "Entender Políticas de Devolución"
+    }
+  },
+  "privacyPolicy": {
+    "title": "Política de Privacidad",
+    "subtitle": "Tu privacidad es nuestra prioridad. Aprende cómo protegemos y manejamos tu información personal",
+    "commitment": {
+      "title": "Nuestro Compromiso de Privacidad",
+      "intro": "En TechHive Pakistán, estamos comprometidos a proteger tu privacidad y asegurar la seguridad de tu información personal. Esta Política de Privacidad explica cómo recopilamos, usamos y protegemos tus datos cuando utilizas nuestros servicios.",
+      "transparency": "Creemos en la transparencia y queremos que entiendas exactamente cómo se maneja tu información. Esta política se aplica a todos los usuarios de nuestro sitio web, aplicaciones móviles y servicios.",
+      "principles": {
+        "title": "Principios Clave de Privacidad:",
+        "items": [
+          "Solo recopilamos información necesaria para nuestros servicios",
+          "Tus datos están protegidos con seguridad de estándar industrial",
+          "Tienes control sobre tu información personal",
+          "Nunca vendemos tus datos personales a terceros",
+          "Comunicación transparente sobre prácticas de datos"
+        ]
+      }
+    },
+    "informationCollection": {
+      "title": "Información que Recopilamos",
+      "personalInfo": {
+        "title": "Información Personal",
+        "description": "Nombre, email, número de teléfono, dirección de envío e información de pago cuando creas una cuenta o realizas una compra."
+      },
+      "orderInfo": {
+        "title": "Información de Pedidos",
+        "description": "Historial de compras, detalles de pedidos, preferencias de productos e interacciones de servicio al cliente para mejorar tu experiencia."
+      },
+      "technicalData": {
+        "title": "Datos Técnicos",
+        "description": "Dirección IP, tipo de navegador, información del dispositivo y patrones de uso del sitio web para mejorar nuestros servicios y seguridad."
+      },
+      "cookies": {
+        "title": "Cookies y Seguimiento",
+        "description": "Cookies esenciales para funcionalidad, cookies analíticas para mejora y cookies de preferencias para personalización."
+      }
+    },
+    "howWeUse": {
+      "title": "Cómo Usamos tu Información",
+      "intro": "Usamos tu información de manera responsable para proporcionar y mejorar nuestros servicios. Así es como utilizamos tus datos:",
+      "orderProcessing": {
+        "title": "Procesamiento de Pedidos",
+        "description": "Procesar pagos, cumplir pedidos, enviar confirmaciones y proporcionar soporte al cliente para tus compras."
+      },
+      "accountManagement": {
+        "title": "Gestión de Cuenta",
+        "description": "Crear y mantener tu cuenta, verificar tu identidad y gestionar tus preferencias y configuraciones."
+      },
+      "serviceImprovement": {
+        "title": "Mejora de Servicios",
+        "description": "Analizar patrones de uso, mejorar nuestro sitio web, desarrollar nuevas características y mejorar la experiencia del usuario."
+      },
+      "communication": {
+        "title": "Comunicación",
+        "description": "Enviar actualizaciones de pedidos, responder consultas, proporcionar soporte y compartir información relevante con tu consentimiento."
+      },
+      "notice": "Nota: Nunca usaremos tu información personal para propósitos distintos a los descritos en esta política sin tu consentimiento explícito."
+    },
+    "dataProtection": {
+      "title": "Protección y Seguridad de Datos",
+      "encryption": {
+        "title": "Encriptación",
+        "description": "Toda la transmisión de datos está protegida con encriptación SSL, y la información sensible está encriptada en reposo."
+      },
+      "accessControl": {
+        "title": "Control de Acceso",
+        "description": "Acceso limitado a datos personales, auditorías regulares de seguridad y capacitación de empleados en protección de datos."
+      },
+      "monitoring": {
+        "title": "Monitoreo",
+        "description": "Monitoreo continuo para actividad sospechosa, prevención de fraude y respuesta a incidentes de seguridad."
+      },
+      "compliance": {
+        "title": "Cumplimiento",
+        "description": "Cumplimiento de leyes de protección de datos, revisiones regulares de políticas y actualizaciones para mantener el cumplimiento."
+      }
+    },
+    "yourRights": {
+      "title": "Tus Derechos de Privacidad",
+      "intro": "Tienes derechos importantes con respecto a tu información personal. Respetamos y apoyamos estos derechos:",
+      "rights": {
+        "title": "Tus Derechos Incluyen:",
+        "access": "Acceso: Solicitar una copia de tus datos personales",
+        "correction": "Corrección: Actualizar o corregir información inexacta",
+        "deletion": "Eliminación: Solicitar eliminación de tus datos (con excepciones)",
+        "portability": "Portabilidad: Recibir tus datos en un formato portable",
+        "optOut": "Opt-out: Cancelar suscripción a comunicaciones de marketing",
+        "restriction": "Restricción: Limitar cómo procesamos tus datos"
+      },
+      "contact": "Para ejercer cualquiera de estos derechos, por favor contáctanos usando la información proporcionada abajo. Responderemos a tu solicitud dentro de 30 días."
+    },
+    "faq": {
+      "title": "FAQ de Privacidad",
+      "sellData": {
+        "question": "¿Venden mi información personal?",
+        "answer": "No, nunca vendemos tu información personal a terceros. Solo compartimos datos con proveedores de servicios confiables que nos ayudan a operar nuestro negocio, y solo para los propósitos descritos en esta política."
+      },
+      "dataRetention": {
+        "question": "¿Cuánto tiempo mantienen mis datos?",
+        "answer": "Mantenemos tu información durante el tiempo necesario para proporcionar nuestros servicios, cumplir obligaciones legales, resolver disputas y hacer cumplir nuestros acuerdos. Cuando ya no necesitamos tus datos, los eliminamos o anonimizamos de forma segura."
+      },
+      "cookies": {
+        "question": "¿Puedo controlar la configuración de cookies?",
+        "answer": "¡Sí! Puedes controlar las cookies a través de la configuración de tu navegador. Sin embargo, deshabilitar ciertas cookies puede afectar la funcionalidad del sitio web. Usamos cookies para mejorar tu experiencia y nuestros servicios."
+      },
+      "dataBreach": {
+        "question": "¿Qué pasa si hay una violación de datos?",
+        "answer": "En el improbable evento de una violación de datos, notificaremos a los usuarios afectados dentro de 72 horas según lo requiere la ley. Tenemos procedimientos de respuesta a incidentes para minimizar cualquier impacto potencial."
+      }
+    },
+    "contact": "¿Preguntas? Contacta a Nuestro Equipo de Privacidad"
+  },
+  "termsOfService": {
+    "title": "Términos de Servicio",
+    "subtitle": "Tu socio tecnológico de confianza. Aprende sobre nuestros términos y condiciones",
+    "overview": {
+      "title": "Nuestros Términos y Condiciones",
+      "intro": "¡Bienvenido a TechHive Pakistán! Estos Términos de Servicio rigen tu uso de nuestro sitio web, aplicaciones móviles y servicios. Al acceder o usar nuestra plataforma, aceptas estar sujeto a estos términos.",
+      "commitment": "Estamos comprometidos a proporcionarte la mejor experiencia de compra tecnológica mientras aseguramos términos justos y transparentes para todos los usuarios. Por favor lee estos términos cuidadosamente antes de usar nuestros servicios.",
+      "highlights": {
+        "title": "Aspectos Destacados de Términos Clave:",
+        "items": [
+          "Términos de servicio claros y transparentes",
+          "Políticas de precios y pagos justos",
+          "Derechos completos de devolución y reembolso",
+          "Gestión de cuenta fácil de usar",
+          "Fuerte protección de datos y privacidad"
+        ]
+      }
+    },
+    "services": {
+      "title": "Nuestros Servicios",
+      "onlineShopping": {
+        "title": "Compras en Línea",
+        "description": "Navega y compra productos tecnológicos con procesamiento de pago seguro y opciones de entrega rápida."
+      },
+      "mobileExperience": {
+        "title": "Experiencia Móvil",
+        "description": "Accede a nuestros servicios a través de aplicaciones móviles con experiencia de usuario optimizada y características."
+      },
+      "easyReturns": {
+        "title": "Devoluciones Fáciles",
+        "description": "Proceso de devolución sin complicaciones con ventana de 30 días y múltiples opciones de reembolso para tu conveniencia."
+      },
+      "customerSupport": {
+        "title": "Soporte al Cliente",
+        "description": "Servicio al cliente 24/7 con múltiples canales de contacto y equipo de soporte dedicado."
+      }
+    },
+    "userResponsibilities": {
+      "title": "Responsabilidades del Usuario",
+      "intro": "Como usuario de TechHive, tienes ciertas responsabilidades para asegurar una experiencia segura y agradable para todos:",
+      "accountSecurity": {
+        "title": "Seguridad de Cuenta",
+        "description": "Mantén la confidencialidad de tus credenciales de cuenta y notifícanos inmediatamente de cualquier acceso no autorizado."
+      },
+      "accurateInformation": {
+        "title": "Información Precisa",
+        "description": "Proporciona información personal precisa y actualizada para pedidos, pagos y gestión de cuenta."
+      },
+      "legalCompliance": {
+        "title": "Cumplimiento Legal",
+        "description": "Usa nuestros servicios en cumplimiento con las leyes y regulaciones aplicables en tu jurisdicción."
+      },
+      "respectfulBehavior": {
+        "title": "Comportamiento Respetuoso",
+        "description": "Trata a nuestro personal y otros usuarios con respeto y evita cualquier forma de acoso o abuso."
+      },
+      "notice": "Nota: La violación de estas responsabilidades puede resultar en suspensión de cuenta o terminación de servicios."
+    },
+    "ordersPayments": {
+      "title": "Pedidos y Pagos",
+      "orderProcess": {
+        "title": "Proceso de Pedido",
+        "description": "Realiza pedidos a través de nuestra plataforma segura con verificación de inventario en tiempo real y confirmación de pedido."
+      },
+      "paymentMethods": {
+        "title": "Métodos de Pago",
+        "description": "Múltiples opciones de pago seguro incluyendo tarjetas de crédito, billeteras digitales y transferencias bancarias."
+      },
+      "shippingDelivery": {
+        "title": "Envío y Entrega",
+        "description": "Entrega rápida y confiable con opciones de seguimiento y múltiples métodos de envío disponibles."
+      },
+      "orderConfirmation": {
+        "title": "Confirmación de Pedido",
+        "description": "Confirmación inmediata de pedido con recibos detallados e información de envío enviada a tu email."
+      }
+    },
+    "prohibitedActivities": {
+      "title": "Actividades Prohibidas",
+      "intro": "Para mantener un ambiente seguro y justo, ciertas actividades están estrictamente prohibidas en nuestra plataforma:",
+      "activities": {
+        "title": "Actividades No Permitidas:",
+        "fraudulent": "Actividades Fraudulentas: Crear cuentas falsas, usar métodos de pago robados",
+        "intellectualProperty": "Violaciones de Propiedad Intelectual: Infringir derechos de autor, marcas comerciales o patentes",
+        "systemAbuse": "Abuso del Sistema: Intentar hackear, interrumpir o sobrecargar nuestros sistemas",
+        "harassment": "Acoso: Intimidar, amenazar o acosar a otros usuarios o personal",
+        "illegalActivities": "Actividades Ilegales: Usar nuestros servicios para cualquier propósito ilegal",
+        "spam": "Spam: Enviar mensajes no solicitados o crear reseñas falsas"
+      },
+      "enforcement": "Nos reservamos el derecho de investigar y tomar acción apropiada contra cualquier violación, incluyendo suspensión de cuenta o acción legal."
+    },
+    "faq": {
+      "title": "FAQ de Términos",
+      "cancelOrder": {
+        "question": "¿Puedo cancelar mi pedido después de realizarlo?",
+        "answer": "Sí, puedes cancelar tu pedido dentro de 2 horas de realizarlo si no ha sido procesado para envío. Contacta a nuestro equipo de servicio al cliente inmediatamente para asistencia."
+      },
+      "defectiveProduct": {
+        "question": "¿Qué pasa si recibo un producto defectuoso?",
+        "answer": "Ofrecemos una política de devolución de 30 días para artículos defectuosos. Contáctanos inmediatamente y proporcionaremos una etiqueta de devolución prepagada y procesaremos un reembolso completo o reemplazo."
+      },
+      "ageRestrictions": {
+        "question": "¿Hay restricciones de edad para usar TechHive?",
+        "answer": "Debes tener al menos 18 años para crear una cuenta y realizar compras. Los usuarios menores de 18 años deben tener consentimiento y supervisión parental."
+      },
+      "updateAccount": {
+        "question": "¿Cómo actualizo mi información de cuenta?",
+        "answer": "Puedes actualizar tu información de cuenta en cualquier momento a través de la configuración de tu cuenta. Por razones de seguridad, algunos cambios pueden requerir verificación."
+      }
+    },
+    "contact": "¿Necesitas Ayuda? Contacta a Nuestro Equipo Legal"
+  },
+  "message": {
+    "emptyChat": {
+      "icon": "💬",
+      "text": "Selecciona un usuario para comenzar a chatear"
+    },
+    "chatHeader": {
+      "online": "En línea",
+      "offline": "Desconectado",
+      "typing": "Escribiendo..."
+    },
+    "loading": {
+      "spinner": "Cargando...",
+      "messages": "Cargando mensajes..."
+    },
+    "emptyMessages": {
+      "icon": "✉️",
+      "text": "Aún no hay mensajes",
+      "subtext": "Envía tu primer mensaje a {{userName}}"
+    },
+    "messageBubble": {
+      "you": "(Tú)",
+      "timeFormat": "h:mm a"
+    },
+    "input": {
+      "placeholder": "Mensaje a {{userName}}...",
+      "sendButton": "Enviar mensaje"
+    },
+    "errors": {
+      "fetchMessages": "Error al cargar mensajes:",
+      "sendMessage": "Error al enviar mensaje:"
+    }
+  },
+  "chatPage": {
+    "accessDenied": "Solo los usuarios conectados pueden acceder a esta página.",
+    "loading": "Cargando usuarios...",
+    "sidebar": {
+      "users": "Usuarios",
+      "customerSupport": "Soporte al Cliente",
+      "noUsers": "No se encontraron usuarios."
+    },
+    "chatArea": {
+      "selectUser": "Selecciona un usuario para comenzar a chatear"
+    },
+    "mobile": {
+      "toggleButton": "Alternar barra lateral"
+    }
+  }
+}

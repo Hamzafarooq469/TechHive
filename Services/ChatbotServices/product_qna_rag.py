@@ -1,0 +1,3074 @@
+"""
+Product Q&A RAG Knowledge Base
+Stores pre-generated questions and answers for products using vector search
+"""
+
+import json
+import numpy as np
+try:
+    import faiss
+    FAISS_AVAILABLE = True
+except ImportError:
+    FAISS_AVAILABLE = False
+    faiss = None
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import pickle
+import os
+from typing import List, Dict, Optional, Tuple
+import logging
+from datetime import datetime
+
+class ProductQnARAG:
+    def __init__(self, knowledge_file: str = "product_qna_knowledge.json", 
+                 index_file: str = "product_qna_index.bin", 
+                 vectorizer_file: str = "product_qna_vectorizer.pkl"):
+        """
+        Initialize Product Q&A RAG Knowledge Base
+        
+        Args:
+            knowledge_file: JSON file containing product Q&A pairs
+            index_file: FAISS index file for vector search
+            vectorizer_file: Pickled TF-IDF vectorizer
+        """
+        # Get the directory where this file is located (ChatbotServices)
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Use absolute paths relative to ChatbotServices directory
+        self.knowledge_file = os.path.join(base_dir, knowledge_file)
+        self.index_file = os.path.join(base_dir, index_file)
+        self.vectorizer_file = os.path.join(base_dir, vectorizer_file)
+        
+        # Initialize components
+        self.qna_pairs = []  # List of {product_id, product_name, category, question, answer}
+        self.documents = []  # Combined question+answer text for search
+        self.vectorizer = None
+        self.faiss_index = None
+        self.document_vectors = None
+        self.use_faiss = FAISS_AVAILABLE
+        
+        # Load or create knowledge base
+        self.load_or_create_knowledge_base()
+        
+        logging.info(f"Product Q&A RAG initialized with {len(self.qna_pairs)} Q&A pairs")
+    
+    def load_or_create_knowledge_base(self):
+        """Load existing knowledge base or create a new one"""
+        if os.path.exists(self.knowledge_file):
+            self.load_knowledge_base()
+        else:
+            self.create_default_knowledge_base()
+        
+        # Load or create vector index
+        if os.path.exists(self.index_file) and os.path.exists(self.vectorizer_file):
+            self.load_vector_index()
+        else:
+            self.create_vector_index()
+    
+    def create_default_knowledge_base(self):
+        """Create default knowledge base with common tech product Q&A"""
+        default_qna = [
+            # Dell XPS 15 Specific Q&A
+            {
+                "product_id": "dell_xps_15",
+                "product_name": "Dell XPS 15",
+                "category": "laptop",
+                "question": "Does it have a backlit keyboard?",
+                "answer": "Yes, the Dell XPS 15 features a premium backlit keyboard with adjustable brightness levels and excellent key travel. The keyboard is comfortable for long typing sessions and makes it easy to work in low-light conditions."
+            },
+            {
+                "product_id": "dell_xps_15",
+                "product_name": "Dell XPS 15",
+                "category": "laptop",
+                "question": "Can the RAM be upgraded?",
+                "answer": "The Dell XPS 15 typically comes with 16GB DDR4 RAM and has accessible memory slots. Most models support up to 32GB or 64GB of RAM (depending on the generation). The RAM is user-upgradeable through the bottom panel, making it a great choice for power users who may need more memory in the future."
+            },
+            {
+                "product_id": "dell_xps_15",
+                "product_name": "Dell XPS 15",
+                "category": "laptop",
+                "question": "What is the expected battery life?",
+                "answer": "The Dell XPS 15 offers impressive battery life, typically lasting 8-12 hours with normal usage (web browsing, document editing). For intensive tasks like video editing or gaming, expect 4-6 hours. The laptop supports fast charging, reaching 80% in about an hour."
+            },
+            {
+                "product_id": "dell_xps_15",
+                "product_name": "Dell XPS 15",
+                "category": "laptop",
+                "question": "What ports does it have?",
+                "answer": "The Dell XPS 15 includes: 2x Thunderbolt 4 ports (USB-C with power delivery and DisplayPort), 1x USB-C 3.2 port, 1x SD card reader (full-size), and 1x 3.5mm headphone/microphone combo jack. Note that it doesn't have traditional USB-A ports, so you may need adapters for older devices."
+            },
+            {
+                "product_id": "dell_xps_15",
+                "product_name": "Dell XPS 15",
+                "category": "laptop",
+                "question": "Does it have Thunderbolt support?",
+                "answer": "Yes! The Dell XPS 15 features 2x Thunderbolt 4 ports that support up to 40Gbps data transfer, dual 4K displays, and power delivery. This makes it excellent for connecting high-speed external storage, eGPUs, and professional docking stations."
+            },
+            {
+                "product_id": "dell_xps_15",
+                "product_name": "Dell XPS 15",
+                "category": "laptop",
+                "question": "Is it good for content creation?",
+                "answer": "Absolutely! The Dell XPS 15 is designed for creators with its powerful Intel Core i7/i9 processors, NVIDIA RTX graphics, up to 64GB RAM, and stunning 4K OLED display option. It handles video editing (4K), photo editing, 3D rendering, and programming with ease. The color-accurate display covers 100% DCI-P3 color gamut."
+            },
+            
+            # MacBook Pro M3 Q&A
+            {
+                "product_id": "macbook_pro_m3",
+                "product_name": "MacBook Pro M3",
+                "category": "laptop",
+                "question": "Does it have a backlit keyboard?",
+                "answer": "Yes, the MacBook Pro M3 features Apple's excellent backlit Magic Keyboard with ambient light sensors that automatically adjust brightness. The keyboard offers great tactile feedback and is perfect for working in any lighting condition."
+            },
+            {
+                "product_id": "macbook_pro_m3",
+                "product_name": "MacBook Pro M3",
+                "category": "laptop",
+                "question": "Can the RAM be upgraded?",
+                "answer": "No, the MacBook Pro M3 has unified memory that is soldered to the motherboard and cannot be upgraded after purchase. It's crucial to choose the right memory configuration (8GB, 16GB, 32GB, or 64GB) when buying. The unified memory architecture is extremely fast and efficient."
+            },
+            {
+                "product_id": "macbook_pro_m3",
+                "product_name": "MacBook Pro M3",
+                "category": "laptop",
+                "question": "What is the expected battery life?",
+                "answer": "The MacBook Pro M3 offers exceptional battery life thanks to Apple Silicon efficiency - up to 18-22 hours for the 14\" model and 20-24 hours for the 16\" model with typical usage. Even demanding tasks like video editing can provide 8-12 hours of runtime."
+            },
+            {
+                "product_id": "macbook_pro_m3",
+                "product_name": "MacBook Pro M3",
+                "category": "laptop",
+                "question": "What ports does it have?",
+                "answer": "The MacBook Pro M3 includes 3x Thunderbolt 4/USB-C ports, 1x HDMI 2.1 port, 1x SDXC card slot, 1x MagSafe 3 charging port, and 1x 3.5mm headphone jack with high-impedance headphone support. The variety of ports makes it highly versatile for professional workflows."
+            },
+            {
+                "product_id": "macbook_pro_m3",
+                "product_name": "MacBook Pro M3",
+                "category": "laptop",
+                "question": "How does the M3 chip perform?",
+                "answer": "The Apple M3 chip delivers outstanding performance with its 8-core CPU, 10-core GPU, and 16-core Neural Engine. It outperforms many Intel i7 processors while consuming significantly less power. Perfect for video editing, 3D rendering, software development, and AI workloads."
+            },
+            {
+                "product_id": "macbook_pro_m3",
+                "product_name": "MacBook Pro M3",
+                "category": "laptop",
+                "question": "Is it good for gaming?",
+                "answer": "While not primarily a gaming laptop, the MacBook Pro M3 can handle many games well thanks to its powerful GPU and Metal 3 support. However, the game library is more limited compared to Windows. It excels at creative work and professional applications."
+            },
+            
+            # ASUS ROG Strix Gaming Laptop Q&A
+            {
+                "product_id": "asus_rog_strix",
+                "product_name": "ASUS ROG Strix",
+                "category": "laptop",
+                "question": "Does it have a backlit keyboard?",
+                "answer": "Yes! The ASUS ROG Strix features per-key RGB backlit keyboard with Aura Sync support. You can customize each key's color, create lighting effects, and sync with other ASUS peripherals. The keyboard also has dedicated gaming keys and anti-ghosting technology."
+            },
+            {
+                "product_id": "asus_rog_strix",
+                "product_name": "ASUS ROG Strix",
+                "category": "laptop",
+                "question": "Can the RAM be upgraded?",
+                "answer": "Yes, the ASUS ROG Strix typically has 2 SO-DIMM slots supporting up to 32GB or 64GB of DDR4/DDR5 RAM (depending on model). The RAM is easily accessible through the bottom panel, allowing for future upgrades to enhance gaming performance."
+            },
+            {
+                "product_id": "asus_rog_strix",
+                "product_name": "ASUS ROG Strix",
+                "category": "laptop",
+                "question": "What is the expected battery life?",
+                "answer": "The ASUS ROG Strix prioritizes gaming performance, so battery life is moderate - expect 4-6 hours with light usage and 1-2 hours during intense gaming. It's best used plugged in for gaming. The laptop supports fast charging to 50% in about 30 minutes."
+            },
+            {
+                "product_id": "asus_rog_strix",
+                "product_name": "ASUS ROG Strix",
+                "category": "laptop",
+                "question": "What refresh rate is the display?",
+                "answer": "The ASUS ROG Strix typically features a high refresh rate display - commonly 144Hz or 165Hz, with premium models offering 240Hz or 300Hz. This provides incredibly smooth gameplay, especially in fast-paced competitive games. The display also supports adaptive sync technology."
+            },
+            {
+                "product_id": "asus_rog_strix",
+                "product_name": "ASUS ROG Strix",
+                "category": "laptop",
+                "question": "How is the cooling system?",
+                "answer": "The ASUS ROG Strix uses advanced cooling with multiple heat pipes, dual/triple fans, and large heatsinks. The laptop includes ROG Intelligent Cooling with customizable fan profiles to balance performance and noise. It handles extended gaming sessions without significant throttling."
+            },
+            {
+                "product_id": "asus_rog_strix",
+                "product_name": "ASUS ROG Strix",
+                "category": "laptop",
+                "question": "Is it good for streaming and content creation?",
+                "answer": "Absolutely! With its powerful CPU (Intel i7/i9 or AMD Ryzen 7/9), dedicated RTX GPU, ample RAM, and fast storage, the ASUS ROG Strix handles streaming, video editing, and content creation excellently. The high-refresh display and powerful specs make it versatile for both gaming and work."
+            },
+            
+            # NVIDIA RTX 4080 Q&A
+            {
+                "product_id": "nvidia_rtx_4080",
+                "product_name": "NVIDIA RTX 4080",
+                "category": "gpu",
+                "question": "What is the VRAM capacity?",
+                "answer": "The NVIDIA RTX 4080 comes with 16GB of GDDR6X memory, providing excellent capacity for 4K gaming, ray tracing, and content creation. The high memory bandwidth ensures smooth performance even with demanding textures and effects."
+            },
+            {
+                "product_id": "nvidia_rtx_4080",
+                "product_name": "NVIDIA RTX 4080",
+                "category": "gpu",
+                "question": "Does it support ray tracing?",
+                "answer": "Yes! The RTX 4080 features 3rd generation RT Cores with significantly improved ray tracing performance compared to previous generations. It can handle ray tracing at 4K with high frame rates, and DLSS 3 with frame generation provides even better performance."
+            },
+            {
+                "product_id": "nvidia_rtx_4080",
+                "product_name": "NVIDIA RTX 4080",
+                "category": "gpu",
+                "question": "What power supply wattage is needed?",
+                "answer": "NVIDIA recommends an 850W power supply for the RTX 4080. The card has a TDP of 320W and uses a single 16-pin 12VHPWR connector (adapter included). Ensure your PSU has quality cables and sufficient PCIe power connectors."
+            },
+            {
+                "product_id": "nvidia_rtx_4080",
+                "product_name": "NVIDIA RTX 4080",
+                "category": "gpu",
+                "question": "What ports does it have?",
+                "answer": "The RTX 4080 typically includes 3x DisplayPort 1.4a and 1x HDMI 2.1 port, supporting up to 4 displays simultaneously. HDMI 2.1 enables 4K@120Hz and 8K@60Hz output, perfect for modern high-refresh gaming monitors and TVs."
+            },
+            {
+                "product_id": "nvidia_rtx_4080",
+                "product_name": "NVIDIA RTX 4080",
+                "category": "gpu",
+                "question": "Is it good for 4K gaming?",
+                "answer": "Excellent! The RTX 4080 is designed for 4K gaming and delivers 80-120+ FPS in most modern games at ultra settings. With DLSS 3 and frame generation, you can achieve even higher frame rates. It's also great for 1440p@240Hz competitive gaming."
+            },
+            {
+                "product_id": "nvidia_rtx_4080",
+                "product_name": "NVIDIA RTX 4080",
+                "category": "gpu",
+                "question": "How does DLSS 3 work?",
+                "answer": "DLSS 3 (Deep Learning Super Sampling) uses AI to upscale lower resolution images to higher resolution with excellent quality, and adds frame generation to create additional frames. This can double or triple your frame rates in supported games while maintaining visual quality."
+            },
+            
+            # AMD Radeon RX 7900 XTX Q&A
+            {
+                "product_id": "amd_rx_7900_xtx",
+                "product_name": "AMD Radeon RX 7900 XTX",
+                "category": "gpu",
+                "question": "What is the VRAM capacity?",
+                "answer": "The AMD Radeon RX 7900 XTX features a massive 24GB of GDDR6 memory, providing exceptional capacity for 4K/8K gaming, content creation, and AI workloads. The large VRAM buffer is particularly beneficial for high-resolution textures and demanding creative applications."
+            },
+            {
+                "product_id": "amd_rx_7900_xtx",
+                "product_name": "AMD Radeon RX 7900 XTX",
+                "category": "gpu",
+                "question": "Does it support ray tracing?",
+                "answer": "Yes, the RX 7900 XTX features 2nd generation ray tracing accelerators that deliver improved ray tracing performance. While not quite matching NVIDIA's RT performance, it handles ray tracing well in most games, especially at 1440p and 4K with FSR enabled."
+            },
+            {
+                "product_id": "amd_rx_7900_xtx",
+                "product_name": "AMD Radeon RX 7900 XTX",
+                "category": "gpu",
+                "question": "What power supply wattage is needed?",
+                "answer": "AMD recommends a 850W power supply for the RX 7900 XTX. The card has a TDP of 355W and uses dual 8-pin PCIe power connectors. A quality 850W PSU will provide sufficient headroom for the entire system."
+            },
+            {
+                "product_id": "amd_rx_7900_xtx",
+                "product_name": "AMD Radeon RX 7900 XTX",
+                "category": "gpu",
+                "question": "How does it compare to NVIDIA RTX 4080?",
+                "answer": "The RX 7900 XTX offers competitive rasterization performance often matching or exceeding the RTX 4080, with 50% more VRAM (24GB vs 16GB). NVIDIA leads in ray tracing and has DLSS 3, while AMD has FSR 3 and better value. Both are excellent for 4K gaming."
+            },
+            {
+                "product_id": "amd_rx_7900_xtx",
+                "product_name": "AMD Radeon RX 7900 XTX",
+                "category": "gpu",
+                "question": "What is FSR 3?",
+                "answer": "FSR 3 (FidelityFX Super Resolution) is AMD's upscaling and frame generation technology. It works on both AMD and NVIDIA GPUs, using temporal upscaling and frame interpolation to boost performance. While not quite matching DLSS 3, it provides significant FPS improvements in supported games."
+            },
+            {
+                "product_id": "amd_rx_7900_xtx",
+                "product_name": "AMD Radeon RX 7900 XTX",
+                "category": "gpu",
+                "question": "Is it good for content creation?",
+                "answer": "Excellent! The 24GB VRAM makes it ideal for 3D rendering, video editing, and AI workloads. It supports AV1 encoding, has strong compute performance, and the large memory buffer prevents bottlenecks with complex projects. It's particularly good value for creator workloads."
+            },
+            
+            # Intel Core i9-14900K Q&A
+            {
+                "product_id": "intel_i9_14900k",
+                "product_name": "Intel Core i9-14900K",
+                "category": "cpu",
+                "question": "How many cores and threads?",
+                "answer": "The Intel Core i9-14900K features 24 cores (8 Performance-cores + 16 Efficient-cores) and 32 threads. This hybrid architecture provides exceptional multi-threaded performance for content creation while maintaining strong single-threaded performance for gaming."
+            },
+            {
+                "product_id": "intel_i9_14900k",
+                "product_name": "Intel Core i9-14900K",
+                "category": "cpu",
+                "question": "What is the boost clock speed?",
+                "answer": "The i9-14900K has a base clock of 3.2GHz and boosts up to 6.0GHz on Performance-cores with Thermal Velocity Boost. This exceptional boost speed delivers outstanding gaming performance and responsiveness in single-threaded applications."
+            },
+            {
+                "product_id": "intel_i9_14900k",
+                "product_name": "Intel Core i9-14900K",
+                "category": "cpu",
+                "question": "Is a cooler included?",
+                "answer": "No, Intel K-series processors do not include stock coolers. You'll need a high-quality aftermarket cooler - a 280mm or 360mm AIO liquid cooler or high-end air cooler is recommended to handle the i9-14900K's power consumption and heat output."
+            },
+            {
+                "product_id": "intel_i9_14900k",
+                "product_name": "Intel Core i9-14900K",
+                "category": "cpu",
+                "question": "What socket type does it use?",
+                "answer": "The i9-14900K uses the LGA 1700 socket, compatible with Intel 600 and 700 series motherboards (Z690, B660, Z790, B760, etc.). Make sure to update your motherboard BIOS to the latest version for optimal compatibility."
+            },
+            {
+                "product_id": "intel_i9_14900k",
+                "product_name": "Intel Core i9-14900K",
+                "category": "cpu",
+                "question": "What is the TDP?",
+                "answer": "The i9-14900K has a base power (PL1) of 125W and maximum turbo power (PL2) of 253W. Under heavy all-core workloads, it can draw even more power. Ensure you have adequate cooling and a quality 850W+ PSU for a complete high-end system."
+            },
+            {
+                "product_id": "intel_i9_14900k",
+                "product_name": "Intel Core i9-14900K",
+                "category": "cpu",
+                "question": "Does it have integrated graphics?",
+                "answer": "Yes, the i9-14900K includes Intel UHD Graphics 770 with 32 execution units. While not for gaming, it's useful for troubleshooting, multi-display setups, and hardware video encoding/decoding when the discrete GPU is busy."
+            },
+            
+            # AMD Ryzen 9 7950X Q&A
+            {
+                "product_id": "amd_ryzen_9_7950x",
+                "product_name": "AMD Ryzen 9 7950X",
+                "category": "cpu",
+                "question": "How many cores and threads?",
+                "answer": "The AMD Ryzen 9 7950X features 16 cores and 32 threads based on the Zen 4 architecture. All cores are full-performance cores (no efficiency cores), providing consistent multi-threaded performance that excels in rendering, compilation, and content creation."
+            },
+            {
+                "product_id": "amd_ryzen_9_7950x",
+                "product_name": "AMD Ryzen 9 7950X",
+                "category": "cpu",
+                "question": "What is the boost clock speed?",
+                "answer": "The Ryzen 9 7950X has a base clock of 4.5GHz and boosts up to 5.7GHz. The high boost clocks across all cores deliver excellent performance in both gaming and productivity workloads, often matching or exceeding Intel's top offerings."
+            },
+            {
+                "product_id": "amd_ryzen_9_7950x",
+                "product_name": "AMD Ryzen 9 7950X",
+                "category": "cpu",
+                "question": "Is a cooler included?",
+                "answer": "No, the Ryzen 9 7950X does not include a stock cooler. AMD recommends a high-performance cooling solution - a 280mm/360mm AIO or premium tower air cooler is necessary to handle the processor's thermal output, especially under sustained workloads."
+            },
+            {
+                "product_id": "amd_ryzen_9_7950x",
+                "product_name": "AMD Ryzen 9 7950X",
+                "category": "cpu",
+                "question": "What socket type does it use?",
+                "answer": "The Ryzen 9 7950X uses the new AM5 socket (LGA 1718), compatible with X670E, X670, and B650 motherboards. AM5 supports DDR5 memory and PCIe 5.0, and AMD has committed to supporting this platform through at least 2025+."
+            },
+            {
+                "product_id": "amd_ryzen_9_7950x",
+                "product_name": "AMD Ryzen 9 7950X",
+                "category": "cpu",
+                "question": "What is the TDP?",
+                "answer": "The Ryzen 9 7950X has a TDP of 170W with a maximum Package Power Tracking (PPT) of 230W. While more efficient than Intel's flagship under load, it still requires robust cooling and a quality 850W PSU for high-end system builds."
+            },
+            {
+                "product_id": "amd_ryzen_9_7950x",
+                "product_name": "AMD Ryzen 9 7950X",
+                "category": "cpu",
+                "question": "Does it have integrated graphics?",
+                "answer": "Yes, the Ryzen 9 7950X includes integrated Radeon Graphics (RDNA 2) with 2 compute units. While basic, it's sufficient for display output, troubleshooting, and light tasks when a discrete GPU isn't available or needed."
+            },
+            
+            # Corsair Vengeance DDR5 RAM Q&A
+            {
+                "product_id": "corsair_vengeance_ddr5",
+                "product_name": "Corsair Vengeance DDR5",
+                "category": "ram",
+                "question": "What is the speed in MHz?",
+                "answer": "Corsair Vengeance DDR5 is available in various speeds from 4800MHz to 7200MHz. The 5600MHz and 6000MHz models offer excellent performance-to-price ratio for most users, while higher speeds benefit content creation and memory-intensive workloads."
+            },
+            {
+                "product_id": "corsair_vengeance_ddr5",
+                "product_name": "Corsair Vengeance DDR5",
+                "category": "ram",
+                "question": "Is it compatible with my motherboard?",
+                "answer": "Corsair Vengeance DDR5 requires a DDR5-compatible motherboard - Intel 600/700 series (for 12th/13th/14th gen CPUs) or AMD AM5 platform (for Ryzen 7000 series). Check your motherboard's QVL list and ensure BIOS is updated for best compatibility."
+            },
+            {
+                "product_id": "corsair_vengeance_ddr5",
+                "product_name": "Corsair Vengeance DDR5",
+                "category": "ram",
+                "question": "Can I mix with existing RAM?",
+                "answer": "While technically possible, mixing DDR5 kits isn't recommended. Different kits may have varying IC chips, timings, and voltage requirements. For best stability and performance, always use identical kits or purchase a matched dual/quad-channel kit from the manufacturer."
+            },
+            {
+                "product_id": "corsair_vengeance_ddr5",
+                "product_name": "Corsair Vengeance DDR5",
+                "category": "ram",
+                "question": "Does it support XMP/EXPO?",
+                "answer": "Yes! Corsair Vengeance DDR5 includes Intel XMP 3.0 profiles for easy overclocking on Intel platforms, and many models also support AMD EXPO for optimized performance on AMD systems. Simply enable the profile in BIOS for rated speeds and timings."
+            },
+            {
+                "product_id": "corsair_vengeance_ddr5",
+                "product_name": "Corsair Vengeance DDR5",
+                "category": "ram",
+                "question": "Does it have RGB lighting?",
+                "answer": "The standard Corsair Vengeance DDR5 has a low-profile black heatspreader without RGB. If you want RGB, consider the Corsair Vengeance RGB DDR5 variant which features 10-zone RGB lighting compatible with iCUE software for customization and synchronization."
+            },
+            {
+                "product_id": "corsair_vengeance_ddr5",
+                "product_name": "Corsair Vengeance DDR5",
+                "category": "ram",
+                "question": "What's the warranty?",
+                "answer": "Corsair Vengeance DDR5 comes with a limited lifetime warranty, demonstrating Corsair's confidence in their product quality. The warranty covers defects and failures, ensuring long-term reliability for your system."
+            },
+            
+            # Samsung 990 PRO NVMe SSD Q&A
+            {
+                "product_id": "samsung_990_pro",
+                "product_name": "Samsung 990 PRO",
+                "category": "ssd",
+                "question": "What are the read/write speeds?",
+                "answer": "The Samsung 990 PRO delivers exceptional performance with sequential reads up to 7,450 MB/s and writes up to 6,900 MB/s. Random performance is also outstanding with up to 1,400K/1,550K IOPS, making it one of the fastest consumer SSDs available."
+            },
+            {
+                "product_id": "samsung_990_pro",
+                "product_name": "Samsung 990 PRO",
+                "category": "ssd",
+                "question": "What is the lifespan/endurance?",
+                "answer": "The Samsung 990 PRO offers excellent endurance: 1TB model = 600 TBW, 2TB = 1,200 TBW, 4TB = 2,400 TBW. With Samsung's 5-year limited warranty, you can expect many years of reliable service even with heavy daily use."
+            },
+            {
+                "product_id": "samsung_990_pro",
+                "product_name": "Samsung 990 PRO",
+                "category": "ssd",
+                "question": "Is it NVMe or SATA?",
+                "answer": "The Samsung 990 PRO is a PCIe 4.0 NVMe SSD in M.2 2280 form factor. It utilizes 4 PCIe lanes for maximum performance and is not backwards compatible with SATA. Ensure your motherboard has an available M.2 slot with PCIe 4.0 support."
+            },
+            {
+                "product_id": "samsung_990_pro",
+                "product_name": "Samsung 990 PRO",
+                "category": "ssd",
+                "question": "Does it come with a heatsink?",
+                "answer": "The Samsung 990 PRO is available in two versions: standard without heatsink, and a version with an integrated heatsink for better thermal performance. The heatsink model is ideal for PlayStation 5 upgrades or systems without motherboard M.2 heatsinks."
+            },
+            {
+                "product_id": "samsung_990_pro",
+                "product_name": "Samsung 990 PRO",
+                "category": "ssd",
+                "question": "Is it compatible with PS5?",
+                "answer": "Yes! The Samsung 990 PRO (especially the heatsink version) is an excellent choice for PlayStation 5 storage expansion. Its speed exceeds Sony's 5,500 MB/s requirement, and the heatsink model fits perfectly in the PS5's M.2 slot with proper cooling."
+            },
+            {
+                "product_id": "samsung_990_pro",
+                "product_name": "Samsung 990 PRO",
+                "category": "ssd",
+                "question": "Does it come with cloning software?",
+                "answer": "Yes, Samsung provides free Samsung Magician software which includes disk cloning, performance optimization, firmware updates, and health monitoring. The software makes it easy to migrate your existing drive to the 990 PRO without reinstalling Windows."
+            },
+            
+            # HP Pavilion Laptop Q&A
+            {
+                "product_id": "hp_pavilion",
+                "product_name": "HP Pavilion",
+                "category": "laptop",
+                "question": "Does it have a backlit keyboard?",
+                "answer": "Yes, most HP Pavilion models feature a backlit keyboard with adjustable brightness. The keyboard design is comfortable for everyday typing and productivity tasks, with good key travel and responsive feedback."
+            },
+            {
+                "product_id": "hp_pavilion",
+                "product_name": "HP Pavilion",
+                "category": "laptop",
+                "question": "Can the RAM be upgraded?",
+                "answer": "The HP Pavilion typically comes with 8GB or 16GB RAM with one or two SO-DIMM slots available. Most models support up to 32GB total RAM, and upgrades are relatively straightforward by accessing the bottom panel. Great for extending the laptop's lifespan."
+            },
+            {
+                "product_id": "hp_pavilion",
+                "product_name": "HP Pavilion",
+                "category": "laptop",
+                "question": "What is the expected battery life?",
+                "answer": "The HP Pavilion offers respectable battery life of 7-9 hours with mixed usage (web browsing, office work, streaming). Battery performance varies by model and configuration, with lower-power Intel or AMD processors providing better endurance."
+            },
+            {
+                "product_id": "hp_pavilion",
+                "product_name": "HP Pavilion",
+                "category": "laptop",
+                "question": "What display quality does it have?",
+                "answer": "HP Pavilion models typically feature Full HD (1920x1080) IPS displays with good color accuracy and viewing angles. Some premium models offer touch screens or 2K resolution. The display is well-suited for everyday tasks, media consumption, and light creative work."
+            },
+            {
+                "product_id": "hp_pavilion",
+                "product_name": "HP Pavilion",
+                "category": "laptop",
+                "question": "Is it good for students and home use?",
+                "answer": "Absolutely! The HP Pavilion is an excellent choice for students and home users, offering a good balance of performance, features, and affordability. It handles multitasking, online learning, media streaming, and general productivity tasks with ease."
+            },
+            {
+                "product_id": "hp_pavilion",
+                "product_name": "HP Pavilion",
+                "category": "laptop",
+                "question": "What ports does it have?",
+                "answer": "The HP Pavilion includes a versatile port selection: typically 2-3 USB-A ports, 1 USB-C port, HDMI output, headphone/microphone combo jack, and SD card reader. Some models also include Ethernet ports for wired connectivity."
+            },
+            
+            # Lenovo ThinkPad Q&A
+            {
+                "product_id": "lenovo_thinkpad",
+                "product_name": "Lenovo ThinkPad",
+                "category": "laptop",
+                "question": "Does it have a backlit keyboard?",
+                "answer": "Yes, Lenovo ThinkPad models feature the legendary ThinkPad keyboard with optional backlight. The keyboard is renowned for its excellent tactile feedback, comfortable key travel, and the iconic red TrackPoint pointing stick, making it a favorite among professionals."
+            },
+            {
+                "product_id": "lenovo_thinkpad",
+                "product_name": "Lenovo ThinkPad",
+                "category": "laptop",
+                "question": "Can the RAM be upgraded?",
+                "answer": "Most Lenovo ThinkPad models have accessible SO-DIMM slots supporting up to 32GB or 64GB RAM depending on the model. Some newer thin-and-light models have soldered RAM, so check your specific model. ThinkPads are known for excellent upgradeability and serviceability."
+            },
+            {
+                "product_id": "lenovo_thinkpad",
+                "product_name": "Lenovo ThinkPad",
+                "category": "laptop",
+                "question": "What is the expected battery life?",
+                "answer": "Lenovo ThinkPad laptops are known for exceptional battery life, typically lasting 10-15 hours with normal business use. Many models support rapid charging and hot-swappable batteries. ThinkPads are designed for professionals who need all-day computing on the go."
+            },
+            {
+                "product_id": "lenovo_thinkpad",
+                "product_name": "Lenovo ThinkPad",
+                "category": "laptop",
+                "question": "Is it durable and business-ready?",
+                "answer": "Absolutely! Lenovo ThinkPad laptops undergo rigorous MIL-STD-810G testing for durability, surviving drops, extreme temperatures, humidity, and vibrations. They feature spill-resistant keyboards, reinforced hinges, and enterprise-grade security features including fingerprint readers and TPM chips."
+            },
+            {
+                "product_id": "lenovo_thinkpad",
+                "product_name": "Lenovo ThinkPad",
+                "category": "laptop",
+                "question": "What security features does it have?",
+                "answer": "ThinkPad laptops include comprehensive security: fingerprint reader, Windows Hello facial recognition (select models), TPM 2.0 chip, BIOS-level security, discrete webcam privacy shutter, and Kensington lock slot. Enterprise models also support Intel vPro for remote management."
+            },
+            {
+                "product_id": "lenovo_thinkpad",
+                "product_name": "Lenovo ThinkPad",
+                "category": "laptop",
+                "question": "What ports does it have?",
+                "answer": "ThinkPad models offer extensive connectivity: multiple USB-A ports, USB-C/Thunderbolt 4 ports, HDMI or DisplayPort, Ethernet jack, headphone/mic combo, and smart card reader (select models). Many support Lenovo's docking stations for one-cable desktop connectivity."
+            },
+            
+            # MSI Gaming Laptop Q&A
+            {
+                "product_id": "msi_gaming",
+                "product_name": "MSI Gaming Laptop",
+                "category": "laptop",
+                "question": "Does it have a backlit keyboard?",
+                "answer": "Yes! MSI Gaming Laptops feature SteelSeries RGB backlit keyboards with customizable per-key lighting and gaming-optimized layouts. The keyboard includes anti-ghosting technology and can be customized using SteelSeries Engine software for different gaming profiles and effects."
+            },
+            {
+                "product_id": "msi_gaming",
+                "product_name": "MSI Gaming Laptop",
+                "category": "laptop",
+                "question": "Can the RAM be upgraded?",
+                "answer": "Yes, MSI Gaming Laptops typically have 2 SO-DIMM slots supporting up to 64GB DDR5 RAM (or DDR4 on older models). Access is straightforward via the bottom panel. MSI designs their gaming laptops with upgradeability in mind for enthusiasts who want to future-proof their systems."
+            },
+            {
+                "product_id": "msi_gaming",
+                "product_name": "MSI Gaming Laptop",
+                "category": "laptop",
+                "question": "What refresh rate is the display?",
+                "answer": "MSI Gaming Laptops offer high refresh rate displays ranging from 144Hz to 360Hz depending on the model. Many feature QHD (2560x1440) or Full HD resolution with excellent color accuracy and response times. Premium models include Mini-LED displays with exceptional brightness and contrast."
+            },
+            {
+                "product_id": "msi_gaming",
+                "product_name": "MSI Gaming Laptop",
+                "category": "laptop",
+                "question": "How is the cooling system?",
+                "answer": "MSI uses their Cooler Boost technology with multiple heat pipes, dual or triple fans, and large vapor chambers. The cooling system is highly effective at managing heat from high-performance CPUs and GPUs, with customizable fan curves through MSI Center software for balancing performance and acoustics."
+            },
+            {
+                "product_id": "msi_gaming",
+                "product_name": "MSI Gaming Laptop",
+                "category": "laptop",
+                "question": "What audio quality does it have?",
+                "answer": "MSI Gaming Laptops feature high-quality audio with support for Hi-Res Audio and Nahimic 3D sound technology. The speakers deliver clear, powerful sound with virtual surround for gaming. Most models include dedicated audio DACs for superior headphone output."
+            },
+            {
+                "product_id": "msi_gaming",
+                "product_name": "MSI Gaming Laptop",
+                "category": "laptop",
+                "question": "Is it good for streaming and content creation?",
+                "answer": "Excellent! MSI Gaming Laptops pack powerful Intel i7/i9 or AMD Ryzen 7/9 processors with NVIDIA RTX GPUs, making them ideal for streaming, video editing, and content creation. The high-performance hardware handles OBS, Adobe Premiere, and other demanding applications alongside gaming."
+            },
+            
+            # NVIDIA RTX 3060 Q&A
+            {
+                "product_id": "nvidia_rtx_3060",
+                "product_name": "NVIDIA RTX 3060",
+                "category": "gpu",
+                "question": "What is the VRAM capacity?",
+                "answer": "The NVIDIA RTX 3060 comes with 12GB of GDDR6 memory, which is unusually generous for a mid-range card. This large VRAM buffer is beneficial for high-resolution textures, ray tracing, and content creation tasks, making it excellent value for the price point."
+            },
+            {
+                "product_id": "nvidia_rtx_3060",
+                "product_name": "NVIDIA RTX 3060",
+                "category": "gpu",
+                "question": "Does it support ray tracing?",
+                "answer": "Yes, the RTX 3060 features 2nd generation RT Cores for hardware-accelerated ray tracing. While not as powerful as higher-tier cards, it handles ray tracing at 1080p and 1440p with good frame rates, especially when DLSS is enabled for performance boost."
+            },
+            {
+                "product_id": "nvidia_rtx_3060",
+                "product_name": "NVIDIA RTX 3060",
+                "category": "gpu",
+                "question": "What power supply wattage is needed?",
+                "answer": "NVIDIA recommends a 550W power supply for the RTX 3060. The card has a TDP of 170W and typically uses a single 8-pin or dual 8-pin PCIe power connector depending on the manufacturer. A quality 550W-650W PSU is ideal for most systems."
+            },
+            {
+                "product_id": "nvidia_rtx_3060",
+                "product_name": "NVIDIA RTX 3060",
+                "category": "gpu",
+                "question": "Is it good for 1440p gaming?",
+                "answer": "Yes! The RTX 3060 is an excellent choice for 1440p gaming, delivering 60-90+ FPS in most modern games at high settings. With DLSS enabled in supported titles, you can achieve even higher frame rates. It's the sweet spot for 1440p gaming at a reasonable price."
+            },
+            {
+                "product_id": "nvidia_rtx_3060",
+                "product_name": "NVIDIA RTX 3060",
+                "category": "gpu",
+                "question": "How does it compare to RTX 3060 Ti?",
+                "answer": "The RTX 3060 has more VRAM (12GB vs 8GB) but the 3060 Ti is about 20-30% faster in gaming due to more CUDA cores and higher memory bandwidth. The RTX 3060 is better value for content creation with its extra VRAM, while the 3060 Ti is better for pure gaming performance."
+            },
+            {
+                "product_id": "nvidia_rtx_3060",
+                "product_name": "NVIDIA RTX 3060",
+                "category": "gpu",
+                "question": "Is it good for content creation?",
+                "answer": "Absolutely! The RTX 3060's 12GB VRAM makes it excellent for video editing, 3D rendering, and graphic design. It supports NVIDIA Studio drivers, hardware-accelerated encoding (NVENC), and CUDA acceleration in applications like Adobe Premiere Pro, DaVinci Resolve, and Blender."
+            },
+            
+            # AMD RX 6700 XT Q&A
+            {
+                "product_id": "amd_rx_6700_xt",
+                "product_name": "AMD RX 6700 XT",
+                "category": "gpu",
+                "question": "What is the VRAM capacity?",
+                "answer": "The AMD RX 6700 XT features 12GB of GDDR6 memory on a 192-bit bus. This generous VRAM capacity handles 1440p gaming with ease and provides headroom for high-resolution textures and future games. The fast Infinity Cache further boosts effective memory bandwidth."
+            },
+            {
+                "product_id": "amd_rx_6700_xt",
+                "product_name": "AMD RX 6700 XT",
+                "category": "gpu",
+                "question": "Does it support ray tracing?",
+                "answer": "Yes, the RX 6700 XT includes 1st generation ray tracing accelerators. While ray tracing performance isn't as strong as NVIDIA's RTX cards, it handles ray tracing at 1080p and 1440p reasonably well, especially with FSR (FidelityFX Super Resolution) enabled."
+            },
+            {
+                "product_id": "amd_rx_6700_xt",
+                "product_name": "AMD RX 6700 XT",
+                "category": "gpu",
+                "question": "What power supply wattage is needed?",
+                "answer": "AMD recommends a 650W power supply for the RX 6700 XT. The card has a TDP of 230W and uses dual 8-pin PCIe power connectors. A quality 650W-750W PSU provides adequate headroom for the entire system with overclocking potential."
+            },
+            {
+                "product_id": "amd_rx_6700_xt",
+                "product_name": "AMD RX 6700 XT",
+                "category": "gpu",
+                "question": "Is it good for 1440p gaming?",
+                "answer": "Excellent! The RX 6700 XT is specifically designed for high-performance 1440p gaming, delivering 100+ FPS in most modern games at high/ultra settings. It competes directly with the RTX 3070 and offers great value for 1440p enthusiasts."
+            },
+            {
+                "product_id": "amd_rx_6700_xt",
+                "product_name": "AMD RX 6700 XT",
+                "category": "gpu",
+                "question": "What is Smart Access Memory?",
+                "answer": "Smart Access Memory (SAM) is AMD's technology that allows Ryzen processors to access the full GPU memory buffer, improving performance by 5-15% in games. It works best when paired with AMD Ryzen 5000/7000 series CPUs and requires a compatible motherboard with BIOS support."
+            },
+            {
+                "product_id": "amd_rx_6700_xt",
+                "product_name": "AMD RX 6700 XT",
+                "category": "gpu",
+                "question": "How efficient is it compared to NVIDIA?",
+                "answer": "The RX 6700 XT is quite power-efficient for its performance level, though it draws more power than the competing RTX 3070. AMD's RDNA 2 architecture provides excellent performance-per-watt. The card runs cool and quiet with good aftermarket cooling solutions."
+            },
+            
+            # Intel Core i5-13600K Q&A
+            {
+                "product_id": "intel_i5_13600k",
+                "product_name": "Intel Core i5-13600K",
+                "category": "cpu",
+                "question": "How many cores and threads?",
+                "answer": "The Intel Core i5-13600K features 14 cores (6 Performance-cores + 8 Efficient-cores) and 20 threads. This hybrid architecture provides exceptional value, offering multi-threaded performance that rivals previous generation i7/i9 processors while maintaining strong gaming performance."
+            },
+            {
+                "product_id": "intel_i5_13600k",
+                "product_name": "Intel Core i5-13600K",
+                "category": "cpu",
+                "question": "What is the boost clock speed?",
+                "answer": "The i5-13600K has a base clock of 3.5GHz and boosts up to 5.1GHz on Performance-cores. This high boost frequency delivers excellent gaming performance, often matching or exceeding more expensive CPUs in gaming scenarios. It's one of the best gaming CPUs for the price."
+            },
+            {
+                "product_id": "intel_i5_13600k",
+                "product_name": "Intel Core i5-13600K",
+                "category": "cpu",
+                "question": "Is a cooler included?",
+                "answer": "No, the i5-13600K does not include a stock cooler. You'll need a quality aftermarket cooler - a good tower air cooler (like Noctua NH-D15) or 240mm AIO liquid cooler is recommended. The processor is manageable with mid-range cooling but benefits from robust solutions."
+            },
+            {
+                "product_id": "intel_i5_13600k",
+                "product_name": "Intel Core i5-13600K",
+                "category": "cpu",
+                "question": "What socket type does it use?",
+                "answer": "The i5-13600K uses the LGA 1700 socket, compatible with Intel 600 and 700 series motherboards (Z690, B660, Z790, B760). It's also backwards compatible with 600-series boards with a BIOS update, providing flexibility for upgraders."
+            },
+            {
+                "product_id": "intel_i5_13600k",
+                "product_name": "Intel Core i5-13600K",
+                "category": "cpu",
+                "question": "Is it good for gaming?",
+                "answer": "Outstanding! The i5-13600K is one of the best gaming CPUs available, offering performance that matches or exceeds the i9-12900K in most games. Its high boost clocks and efficient core architecture deliver exceptional frame rates at 1080p and 1440p. Excellent value for gamers."
+            },
+            {
+                "product_id": "intel_i5_13600k",
+                "product_name": "Intel Core i5-13600K",
+                "category": "cpu",
+                "question": "What is the power consumption?",
+                "answer": "The i5-13600K has a base power of 125W and maximum turbo power of 181W. While efficient for its performance level, it still requires adequate cooling and a quality 650W+ PSU for a complete gaming system. Power consumption is reasonable compared to higher-tier CPUs."
+            },
+            
+            # AMD Ryzen 5 7600X Q&A
+            {
+                "product_id": "amd_ryzen_5_7600x",
+                "product_name": "AMD Ryzen 5 7600X",
+                "category": "cpu",
+                "question": "How many cores and threads?",
+                "answer": "The AMD Ryzen 5 7600X features 6 cores and 12 threads based on the Zen 4 architecture. All cores are full-performance cores with excellent IPC (instructions per cycle), providing strong gaming and productivity performance despite the lower core count compared to Intel's hybrid designs."
+            },
+            {
+                "product_id": "amd_ryzen_5_7600x",
+                "product_name": "AMD Ryzen 5 7600X",
+                "category": "cpu",
+                "question": "What is the boost clock speed?",
+                "answer": "The Ryzen 5 7600X has a base clock of 4.7GHz and boosts up to 5.3GHz. These high clock speeds deliver exceptional single-threaded and gaming performance, often matching or exceeding Intel's competing i5 processors in gaming benchmarks. Great for competitive gaming."
+            },
+            {
+                "product_id": "amd_ryzen_5_7600x",
+                "product_name": "AMD Ryzen 5 7600X",
+                "category": "cpu",
+                "question": "Is a cooler included?",
+                "answer": "No, the Ryzen 5 7600X does not include a stock cooler. AMD recommends a quality tower air cooler or 240mm AIO. The processor has a 105W TDP but is relatively easy to cool compared to higher-end Ryzen models, making it work well with mid-range cooling solutions."
+            },
+            {
+                "product_id": "amd_ryzen_5_7600x",
+                "product_name": "AMD Ryzen 5 7600X",
+                "category": "cpu",
+                "question": "What socket type does it use?",
+                "answer": "The Ryzen 5 7600X uses the new AM5 socket (LGA 1718), compatible with X670E, X670, and B650 motherboards. AM5 requires DDR5 memory and offers PCIe 5.0 support. AMD has committed to supporting AM5 through 2025+, providing a good upgrade path."
+            },
+            {
+                "product_id": "amd_ryzen_5_7600x",
+                "product_name": "AMD Ryzen 5 7600X",
+                "category": "cpu",
+                "question": "Is it good for gaming?",
+                "answer": "Excellent! The Ryzen 5 7600X is a stellar gaming CPU, delivering performance comparable to much more expensive processors in gaming scenarios. Its high clock speeds and efficient architecture make it ideal for 1080p and 1440p gaming. Best value AMD gaming CPU."
+            },
+            {
+                "product_id": "amd_ryzen_5_7600x",
+                "product_name": "AMD Ryzen 5 7600X",
+                "category": "cpu",
+                "question": "How does it compare to Intel i5-13600K?",
+                "answer": "The Ryzen 5 7600X trades blows with the i5-13600K in gaming (often within 5%), but the Intel chip leads in multi-threaded workloads due to more cores (14 vs 6). The 7600X is more power-efficient and runs cooler. Both are excellent choices with platform preferences being a key factor."
+            },
+            
+            # G.Skill Trident Z RGB Q&A
+            {
+                "product_id": "gskill_trident_z",
+                "product_name": "G.Skill Trident Z RGB",
+                "category": "ram",
+                "question": "What is the speed in MHz?",
+                "answer": "G.Skill Trident Z RGB is available in DDR4 speeds from 3200MHz to 4400MHz and DDR5 speeds from 5600MHz to 8000MHz. The RGB series is known for reaching high stable speeds with excellent compatibility. Popular configurations include DDR4-3600 CL16 and DDR5-6000 CL30."
+            },
+            {
+                "product_id": "gskill_trident_z",
+                "product_name": "G.Skill Trident Z RGB",
+                "category": "ram",
+                "question": "Is it compatible with my motherboard?",
+                "answer": "G.Skill Trident Z RGB has excellent motherboard compatibility with both Intel and AMD platforms. DDR4 versions work with most modern boards, while DDR5 requires 12th gen Intel or newer, or AMD Ryzen 7000 series. Check your motherboard's QVL for specific kit compatibility."
+            },
+            {
+                "product_id": "gskill_trident_z",
+                "product_name": "G.Skill Trident Z RGB",
+                "category": "ram",
+                "question": "How do I control the RGB lighting?",
+                "answer": "Trident Z RGB lighting is controlled through motherboard RGB software (ASUS Aura Sync, MSI Mystic Light, Gigabyte RGB Fusion, ASRock Polychrome). The RGB is fully customizable with numerous effects, colors, and can sync with other RGB components for unified lighting."
+            },
+            {
+                "product_id": "gskill_trident_z",
+                "product_name": "G.Skill Trident Z RGB",
+                "category": "ram",
+                "question": "Does it support XMP/EXPO?",
+                "answer": "Yes! G.Skill Trident Z RGB includes Intel XMP profiles for easy one-click overclocking to rated speeds on Intel platforms. DDR5 versions also support AMD EXPO profiles for optimal performance on AM5 systems. Simply enable the profile in BIOS for advertised speeds."
+            },
+            {
+                "product_id": "gskill_trident_z",
+                "product_name": "G.Skill Trident Z RGB",
+                "category": "ram",
+                "question": "What's the build quality like?",
+                "answer": "G.Skill Trident Z RGB features premium build quality with aluminum heatspreaders for effective cooling and striking aesthetics. The RGB diffuser is well-designed for even light distribution. G.Skill is known for using high-quality Samsung B-die or Hynix ICs for excellent overclocking potential."
+            },
+            {
+                "product_id": "gskill_trident_z",
+                "product_name": "G.Skill Trident Z RGB",
+                "category": "ram",
+                "question": "What's the warranty?",
+                "answer": "G.Skill Trident Z RGB comes with a limited lifetime warranty, one of the best in the industry. This demonstrates G.Skill's confidence in their product quality and provides peace of mind for long-term system reliability."
+            },
+            
+            # Crucial P5 Plus NVMe SSD Q&A
+            {
+                "product_id": "crucial_p5_plus",
+                "product_name": "Crucial P5 Plus",
+                "category": "ssd",
+                "question": "What are the read/write speeds?",
+                "answer": "The Crucial P5 Plus delivers impressive PCIe 4.0 performance with sequential reads up to 6,600 MB/s and writes up to 5,000 MB/s. While not the absolute fastest, it offers excellent real-world performance for gaming, content creation, and general use at a competitive price point."
+            },
+            {
+                "product_id": "crucial_p5_plus",
+                "product_name": "Crucial P5 Plus",
+                "category": "ssd",
+                "question": "What is the lifespan/endurance?",
+                "answer": "The Crucial P5 Plus offers solid endurance: 1TB = 600 TBW, 2TB = 1,200 TBW. Backed by Crucial's 5-year limited warranty, the drive provides reliable long-term performance. Crucial is a trusted brand (Micron subsidiary) known for quality and reliability."
+            },
+            {
+                "product_id": "crucial_p5_plus",
+                "product_name": "Crucial P5 Plus",
+                "category": "ssd",
+                "question": "Does it need a heatsink?",
+                "answer": "The Crucial P5 Plus doesn't include a heatsink but works well with motherboard M.2 heatsinks or aftermarket solutions. Under sustained workloads, a heatsink helps maintain peak performance and extends drive lifespan. For gaming and general use, thermal throttling is rarely an issue."
+            },
+            {
+                "product_id": "crucial_p5_plus",
+                "product_name": "Crucial P5 Plus",
+                "category": "ssd",
+                "question": "Is it good for gaming?",
+                "answer": "Yes! The Crucial P5 Plus provides excellent gaming performance with fast load times and smooth texture streaming. While not as fast as flagship drives, the performance difference is negligible in gaming scenarios. It's an excellent value option for gamers looking for Gen 4 speeds."
+            },
+            {
+                "product_id": "crucial_p5_plus",
+                "product_name": "Crucial P5 Plus",
+                "category": "ssd",
+                "question": "How does it compare to Samsung 980 PRO?",
+                "answer": "The Crucial P5 Plus offers similar real-world performance to the 980 PRO at a lower price point. The Samsung drive has slightly higher benchmark numbers and includes Samsung Magician software, but the Crucial provides better value with nearly identical gaming and application performance."
+            },
+            {
+                "product_id": "crucial_p5_plus",
+                "product_name": "Crucial P5 Plus",
+                "category": "ssd",
+                "question": "Does it work with PS5?",
+                "answer": "Yes! The Crucial P5 Plus meets PS5's speed requirements (5,500+ MB/s) and works great as expanded storage. You'll need to add a heatsink for PS5 installation to meet Sony's thermal requirements. It's a popular and cost-effective choice for PS5 storage expansion."
+            },
+            
+            # WD Black SN850X NVMe SSD Q&A
+            {
+                "product_id": "wd_black_sn850x",
+                "product_name": "WD Black SN850X",
+                "category": "ssd",
+                "question": "What are the read/write speeds?",
+                "answer": "The WD Black SN850X delivers flagship PCIe 4.0 performance with sequential reads up to 7,300 MB/s and writes up to 6,600 MB/s. It's one of the fastest Gen 4 drives available, making it ideal for gaming, content creation, and professional workloads requiring maximum storage performance."
+            },
+            {
+                "product_id": "wd_black_sn850x",
+                "product_name": "WD Black SN850X",
+                "category": "ssd",
+                "question": "What is the lifespan/endurance?",
+                "answer": "The WD Black SN850X offers excellent endurance: 1TB = 600 TBW, 2TB = 1,200 TBW, 4TB = 2,400 TBW. Backed by a 5-year limited warranty, this drive is built for heavy workloads and long-term reliability. WD's reputation for quality ensures peace of mind."
+            },
+            {
+                "product_id": "wd_black_sn850x",
+                "product_name": "WD Black SN850X",
+                "category": "ssd",
+                "question": "Does it come with a heatsink?",
+                "answer": "The WD Black SN850X is available in both standard and heatsink versions. The heatsink model features a sleek low-profile design that works with most motherboards and is perfect for PS5. The heatsink effectively manages thermals during sustained workloads."
+            },
+            {
+                "product_id": "wd_black_sn850x",
+                "product_name": "WD Black SN850X",
+                "category": "ssd",
+                "question": "Is it good for gaming?",
+                "answer": "Outstanding! The WD Black SN850X is optimized for gaming with blazing-fast load times, excellent random read performance, and consistent speeds under load. It's a top choice for gamers who want the absolute best storage performance and works perfectly with DirectStorage technology."
+            },
+            {
+                "product_id": "wd_black_sn850x",
+                "product_name": "WD Black SN850X",
+                "category": "ssd",
+                "question": "Does it have software support?",
+                "answer": "Yes! WD provides the WD Dashboard software for monitoring drive health, performance, firmware updates, and temperature. The software also includes secure erase and diagnostic tools. While simpler than Samsung Magician, it covers all essential SSD management features."
+            },
+            {
+                "product_id": "wd_black_sn850x",
+                "product_name": "WD Black SN850X",
+                "category": "ssd",
+                "question": "Is it compatible with PS5?",
+                "answer": "Perfect for PS5! The WD Black SN850X (with heatsink) is officially recommended by WD for PlayStation 5 and exceeds Sony's 5,500 MB/s requirement. The heatsink model fits the PS5's M.2 slot perfectly and provides reliable expanded storage for your game library."
+            },
+            
+            # Redmi 13 Pro Q&A
+            {
+                "product_id": "redmi_13_pro",
+                "product_name": "Redmi 13 Pro",
+                "category": "mobile",
+                "question": "What is the camera quality?",
+                "answer": "The Redmi 13 Pro features a 200MP main camera with OIS, 8MP ultra-wide, and 2MP macro lens. It captures stunning photos with excellent detail and color accuracy. The 16MP front camera is perfect for selfies and video calls."
+            },
+            {
+                "product_id": "redmi_13_pro",
+                "product_name": "Redmi 13 Pro",
+                "category": "mobile",
+                "question": "What is the battery capacity?",
+                "answer": "The Redmi 13 Pro packs a 5000mAh battery with 67W fast charging support. It easily lasts a full day with heavy use and charges from 0-100% in about 45 minutes. Perfect for users who need reliable all-day battery life."
+            },
+            {
+                "product_id": "redmi_13_pro",
+                "product_name": "Redmi 13 Pro",
+                "category": "mobile",
+                "question": "What processor does it have?",
+                "answer": "The Redmi 13 Pro is powered by the Qualcomm Snapdragon 7s Gen 2 processor, offering excellent performance for gaming, multitasking, and daily use. Paired with up to 12GB RAM and 512GB storage, it handles demanding tasks smoothly."
+            },
+            {
+                "product_id": "redmi_13_pro",
+                "product_name": "Redmi 13 Pro",
+                "category": "mobile",
+                "question": "What display type does it have?",
+                "answer": "The Redmi 13 Pro sports a 6.67-inch AMOLED display with 120Hz refresh rate and 1920Hz PWM dimming. The screen delivers vibrant colors, deep blacks, and smooth scrolling. Gorilla Glass Victus protection ensures durability."
+            },
+            {
+                "product_id": "redmi_13_pro",
+                "product_name": "Redmi 13 Pro",
+                "category": "mobile",
+                "question": "Does it support 5G?",
+                "answer": "Yes, the Redmi 13 Pro supports 5G connectivity with dual SIM capability. It also includes Wi-Fi 6, Bluetooth 5.3, NFC for contactless payments, and an IR blaster for controlling appliances. Comprehensive connectivity features."
+            },
+            {
+                "product_id": "redmi_13_pro",
+                "product_name": "Redmi 13 Pro",
+                "category": "mobile",
+                "question": "Is it good value for money?",
+                "answer": "Absolutely! The Redmi 13 Pro offers flagship-level features at a mid-range price: 200MP camera, AMOLED 120Hz display, fast charging, and 5G. It's one of the best value smartphones for photography and multimedia enthusiasts."
+            },
+            
+            # iPhone 15 Pro Q&A
+            {
+                "product_id": "iphone_15_pro",
+                "product_name": "iPhone 15 Pro",
+                "category": "mobile",
+                "question": "What chip does it use?",
+                "answer": "The iPhone 15 Pro features Apple's A17 Pro chip built on 3nm technology, the most advanced smartphone processor. It delivers incredible performance for gaming (console-quality graphics), video editing, and AI tasks while maintaining excellent efficiency."
+            },
+            {
+                "product_id": "iphone_15_pro",
+                "product_name": "iPhone 15 Pro",
+                "category": "mobile",
+                "question": "What are the camera capabilities?",
+                "answer": "The iPhone 15 Pro has a triple 48MP camera system: main (with 2x telephoto crop), ultra-wide, and 3x telephoto. ProRAW and ProRes video recording, Cinematic mode 4K 30fps, and exceptional low-light performance make it a content creator's dream."
+            },
+            {
+                "product_id": "iphone_15_pro",
+                "product_name": "iPhone 15 Pro",
+                "category": "mobile",
+                "question": "Does it have USB-C?",
+                "answer": "Yes! The iPhone 15 Pro features USB-C with USB 3.2 Gen 2 speeds (10Gbps), a major upgrade from Lightning. It supports fast data transfer, ProRes video recording to external drives, and can charge AirPods and Apple Watch."
+            },
+            {
+                "product_id": "iphone_15_pro",
+                "product_name": "iPhone 15 Pro",
+                "category": "mobile",
+                "question": "What is the Action Button?",
+                "answer": "The iPhone 15 Pro replaces the mute switch with a customizable Action Button. Program it to open Camera, toggle Silent mode, start Voice Memos, activate Shortcuts, or any custom action. Long-press for quick access to your favorite feature."
+            },
+            {
+                "product_id": "iphone_15_pro",
+                "product_name": "iPhone 15 Pro",
+                "category": "mobile",
+                "question": "What is the battery life?",
+                "answer": "The iPhone 15 Pro offers up to 23 hours of video playback with efficient A17 Pro chip power management. It supports MagSafe wireless charging (15W), Qi2 wireless charging, and fast wired charging up to 27W. All-day battery for typical use."
+            },
+            {
+                "product_id": "iphone_15_pro",
+                "product_name": "iPhone 15 Pro",
+                "category": "mobile",
+                "question": "What about the titanium design?",
+                "answer": "The iPhone 15 Pro features aerospace-grade titanium construction, making it lighter and more durable than previous stainless steel models. The brushed titanium finish is premium, scratch-resistant, and comfortable to hold. Available in Natural, Blue, White, and Black Titanium."
+            },
+            
+            # Samsung Galaxy S24 Ultra Q&A
+            {
+                "product_id": "galaxy_s24_ultra",
+                "product_name": "Samsung Galaxy S24 Ultra",
+                "category": "mobile",
+                "question": "What makes the S Pen special?",
+                "answer": "The Galaxy S24 Ultra includes an integrated S Pen with 4096 pressure levels and ultra-low latency. Perfect for note-taking, drawing, and precise navigation. Air Actions let you control your phone remotely. The S Pen slides into the phone body—no charging needed."
+            },
+            {
+                "product_id": "galaxy_s24_ultra",
+                "product_name": "Samsung Galaxy S24 Ultra",
+                "category": "mobile",
+                "question": "What are the camera capabilities?",
+                "answer": "The Galaxy S24 Ultra features a 200MP main sensor with OIS, 12MP ultra-wide, 10MP 3x telephoto, and 50MP 5x periscope telephoto. Space Zoom reaches 100x. 8K video recording, Super Steady stabilization, and Nightography deliver professional-quality content in any lighting."
+            },
+            {
+                "product_id": "galaxy_s24_ultra",
+                "product_name": "Samsung Galaxy S24 Ultra",
+                "category": "mobile",
+                "question": "What AI features does it have?",
+                "answer": "Galaxy AI powers incredible features: Circle to Search (search anything on screen), Live Translate (real-time call translation), Note Assist (AI summaries), Photo Assist (object removal, HDR enhancement), and Generative Edit. AI runs on-device for privacy and speed."
+            },
+            {
+                "product_id": "galaxy_s24_ultra",
+                "product_name": "Samsung Galaxy S24 Ultra",
+                "category": "mobile",
+                "question": "What display does it have?",
+                "answer": "The S24 Ultra sports a stunning 6.8-inch Dynamic AMOLED 2X display with QHD+ resolution (3120x1440), 120Hz adaptive refresh rate, and peak brightness of 2600 nits—the brightest smartphone screen. Corning Gorilla Armor reduces glare and reflections significantly."
+            },
+            {
+                "product_id": "galaxy_s24_ultra",
+                "product_name": "Samsung Galaxy S24 Ultra",
+                "category": "mobile",
+                "question": "What is the battery and charging?",
+                "answer": "The Galaxy S24 Ultra has a 5000mAh battery with 45W super fast wired charging, 15W wireless charging, and reverse wireless charging. Intelligent power management delivers all-day battery life with heavy use. Fast charging reaches 65% in 30 minutes."
+            },
+            {
+                "product_id": "galaxy_s24_ultra",
+                "product_name": "Samsung Galaxy S24 Ultra",
+                "category": "mobile",
+                "question": "What processor powers it?",
+                "answer": "The Galaxy S24 Ultra uses Qualcomm Snapdragon 8 Gen 3 for Galaxy (overclocked custom version) with 12GB RAM. It's the fastest Android phone for gaming, AI tasks, and multitasking. Ray tracing support delivers console-quality mobile gaming performance."
+            },
+            
+            # PlayStation 5 Pro Q&A
+            {
+                "product_id": "ps5_pro",
+                "product_name": "PlayStation 5 Pro",
+                "category": "console",
+                "question": "What are the graphics upgrades?",
+                "answer": "The PS5 Pro features a significantly upgraded GPU with 67% more Compute Units and 28% faster memory than base PS5. Advanced ray tracing is up to 3x faster. PS5 Pro Game Boost enhances over 8,500 PS4 games with improved performance and image quality."
+            },
+            {
+                "product_id": "ps5_pro",
+                "product_name": "PlayStation 5 Pro",
+                "category": "console",
+                "question": "What is PlayStation Spectral Super Resolution?",
+                "answer": "PSSR is Sony's AI-driven upscaling technology that delivers 4K image quality from lower native resolutions, similar to NVIDIA DLSS. It increases frame rates while maintaining visual fidelity. Games patched for PS5 Pro show dramatically improved clarity and performance."
+            },
+            {
+                "product_id": "ps5_pro",
+                "product_name": "PlayStation 5 Pro",
+                "category": "console",
+                "question": "What storage does it include?",
+                "answer": "The PS5 Pro includes a 2TB internal SSD (double the base PS5), providing ample space for modern games. It supports M.2 NVMe SSD expansion up to 8TB. The ultra-fast SSD eliminates load times and enables instant fast travel in games."
+            },
+            {
+                "product_id": "ps5_pro",
+                "product_name": "PlayStation 5 Pro",
+                "category": "console",
+                "question": "Does it have a disc drive?",
+                "answer": "The PS5 Pro is digital-only by default but supports an optional detachable Ultra HD Blu-ray disc drive (sold separately). This keeps the base price lower while offering flexibility for physical media collectors. The drive attaches seamlessly to the console."
+            },
+            {
+                "product_id": "ps5_pro",
+                "product_name": "PlayStation 5 Pro",
+                "category": "console",
+                "question": "What performance modes are available?",
+                "answer": "PS5 Pro games offer enhanced modes: 4K 60fps with ray tracing (Performance Pro), 8K output support (select titles), 120fps modes, and VRR for smooth gameplay. You no longer choose between fidelity and performance—get both simultaneously with PS5 Pro."
+            },
+            {
+                "product_id": "ps5_pro",
+                "product_name": "PlayStation 5 Pro",
+                "category": "console",
+                "question": "Is it worth upgrading from PS5?",
+                "answer": "If you prioritize the best visual and performance experience, yes! The PS5 Pro excels with 4K displays and offers noticeably sharper image quality and smoother frame rates. Existing PS5 games receive free Pro enhancements. Casual gamers may be satisfied with base PS5."
+            },
+            
+            # OnePlus 12 Q&A
+            {
+                "product_id": "oneplus_12",
+                "product_name": "OnePlus 12",
+                "category": "mobile",
+                "question": "What charging technology does it have?",
+                "answer": "The OnePlus 12 features blazing-fast 100W SUPERVOOC wired charging (0-100% in just 26 minutes) and 50W wireless charging. It includes advanced battery health technology that maintains 80% capacity after 1600 charge cycles—4 years of daily charging."
+            },
+            {
+                "product_id": "oneplus_12",
+                "product_name": "OnePlus 12",
+                "category": "mobile",
+                "question": "What display does it have?",
+                "answer": "The OnePlus 12 sports a stunning 6.82-inch LTPO AMOLED display with 1-120Hz adaptive refresh rate, QHD+ resolution (3168x1440), and Dolby Vision. Peak brightness reaches 4500 nits—incredibly bright for outdoor visibility. ProXDR technology delivers exceptional HDR content."
+            },
+            {
+                "product_id": "oneplus_12",
+                "product_name": "OnePlus 12",
+                "category": "mobile",
+                "question": "What are the Hasselblad camera features?",
+                "answer": "The OnePlus 12 features Hasselblad-tuned cameras: 50MP main (Sony LYT-808), 48MP ultra-wide, and 64MP 3x periscope telephoto. Hasselblad Natural Color Calibration delivers accurate, film-like colors. 4K Dolby Vision video, RAW support, and Pro Mode offer creative control."
+            },
+            {
+                "product_id": "oneplus_12",
+                "product_name": "OnePlus 12",
+                "category": "mobile",
+                "question": "What processor powers it?",
+                "answer": "The OnePlus 12 uses Qualcomm Snapdragon 8 Gen 3 with up to 16GB LPDDR5X RAM and 512GB UFS 4.0 storage. It's one of the fastest Android phones available, excelling in gaming, multitasking, and demanding applications. Enhanced thermal management keeps it cool."
+            },
+            {
+                "product_id": "oneplus_12",
+                "product_name": "OnePlus 12",
+                "category": "mobile",
+                "question": "What is the battery capacity?",
+                "answer": "The OnePlus 12 packs a massive 5400mAh battery—larger than most flagships—delivering exceptional all-day battery life even with heavy use. Combined with efficient Snapdragon 8 Gen 3 and OxygenOS optimizations, it easily lasts 1.5-2 days with moderate use."
+            },
+            {
+                "product_id": "oneplus_12",
+                "product_name": "OnePlus 12",
+                "category": "mobile",
+                "question": "What software experience does it offer?",
+                "answer": "OxygenOS 14 (based on Android 14) delivers a clean, fast, and customizable experience. It includes 4 years of OS updates and 5 years of security updates. Features like Aquamorphic Design, Smart Cutout, Trinity Engine, and minimal bloatware make it user-friendly."
+            },
+            
+            # Razer Blade 15 Q&A
+            {
+                "product_id": "razer_blade_15",
+                "product_name": "Razer Blade 15",
+                "category": "laptop",
+                "question": "What display options are available?",
+                "answer": "The Razer Blade 15 offers multiple premium displays: Full HD 360Hz for esports, QHD 240Hz for balanced gaming, and 4K 144Hz OLED for content creation. All feature 100% DCI-P3 color accuracy, making it perfect for both gaming and creative work."
+            },
+            {
+                "product_id": "razer_blade_15",
+                "product_name": "Razer Blade 15",
+                "category": "laptop",
+                "question": "What GPU options are available?",
+                "answer": "The Razer Blade 15 comes with NVIDIA GeForce RTX 40-series GPUs (RTX 4060, 4070, or 4080), delivering desktop-class gaming performance. Ray tracing, DLSS 3.0, and high frame rates make it ideal for AAA gaming, 3D rendering, and AI applications."
+            },
+            {
+                "product_id": "razer_blade_15",
+                "product_name": "Razer Blade 15",
+                "category": "laptop",
+                "question": "How is the build quality?",
+                "answer": "The Razer Blade 15 features a precision-milled aluminum unibody chassis with anodized finish. At just 0.67\" thin and 4.4 lbs, it's remarkably portable for a gaming laptop. The build quality rivals MacBook Pro—premium, durable, and sleek. Per-key RGB Chroma keyboard included."
+            },
+            {
+                "product_id": "razer_blade_15",
+                "product_name": "Razer Blade 15",
+                "category": "laptop",
+                "question": "What processor does it have?",
+                "answer": "The Razer Blade 15 uses Intel Core i7-13800H or i9-13950HX processors (13th Gen) with 14 cores and 20 threads. These powerful CPUs handle gaming, streaming, video editing, and multitasking effortlessly. Excellent single-thread performance for high frame rates."
+            },
+            {
+                "product_id": "razer_blade_15",
+                "product_name": "Razer Blade 15",
+                "category": "laptop",
+                "question": "What cooling system does it use?",
+                "answer": "Razer's vapor chamber cooling system features a custom vapor chamber, dual fans, and strategically placed vents for optimal airflow. It keeps the CPU and GPU cool during intense gaming sessions while maintaining relatively quiet operation. Thermal performance is class-leading."
+            },
+            {
+                "product_id": "razer_blade_15",
+                "product_name": "Razer Blade 15",
+                "category": "laptop",
+                "question": "What connectivity does it offer?",
+                "answer": "The Razer Blade 15 includes Thunderbolt 4 (USB-C), USB-A 3.2, HDMI 2.1, SD card reader, 3.5mm audio jack, Kensington lock, and Wi-Fi 6E. Extensive ports support multiple external displays, high-speed peripherals, and professional workflows without dongles."
+            },
+            
+            # Nothing Phone (3) Q&A
+            {
+                "product_id": "nothing_phone_3",
+                "product_name": "Nothing Phone (3)",
+                "category": "mobile",
+                "question": "What is the Glyph Interface?",
+                "answer": "The Nothing Phone (3) features an upgraded Glyph Interface with customizable LED light patterns on the back. Get visual notifications for calls, messages, app alerts, charging status, and timers without checking the screen. Create custom patterns for contacts and apps."
+            },
+            {
+                "product_id": "nothing_phone_3",
+                "product_name": "Nothing Phone (3)",
+                "category": "mobile",
+                "question": "What display does it have?",
+                "answer": "The Nothing Phone (3) sports a 6.7-inch LTPO AMOLED display with 1-120Hz adaptive refresh rate, Full HD+ resolution, and HDR10+ support. The display is exceptionally bright (up to 2000 nits peak) with minimal bezels and a centered punch-hole camera."
+            },
+            {
+                "product_id": "nothing_phone_3",
+                "product_name": "Nothing Phone (3)",
+                "category": "mobile",
+                "question": "What processor does it use?",
+                "answer": "The Nothing Phone (3) is powered by Qualcomm Snapdragon 8 Gen 2 with up to 12GB RAM and 512GB storage. Performance is flagship-level for gaming, multitasking, and demanding apps. Enhanced thermal management ensures sustained performance during intensive tasks."
+            },
+            {
+                "product_id": "nothing_phone_3",
+                "product_name": "Nothing Phone (3)",
+                "category": "mobile",
+                "question": "What are the camera capabilities?",
+                "answer": "The Nothing Phone (3) features dual 50MP cameras: a main sensor with OIS and an ultra-wide lens. The camera system delivers impressive photo quality with accurate colors and excellent dynamic range. 4K video at 60fps and night mode perform admirably."
+            },
+            {
+                "product_id": "nothing_phone_3",
+                "product_name": "Nothing Phone (3)",
+                "category": "mobile",
+                "question": "What is Nothing OS like?",
+                "answer": "Nothing OS 2.5 offers a clean, bloat-free Android 14 experience with unique design elements matching the phone's aesthetic. Intuitive widgets, custom fonts, and smooth animations create a cohesive experience. 3 years of OS updates and 4 years of security patches."
+            },
+            {
+                "product_id": "nothing_phone_3",
+                "product_name": "Nothing Phone (3)",
+                "category": "mobile",
+                "question": "What is the battery and charging?",
+                "answer": "The Nothing Phone (3) packs a 5000mAh battery with 45W wired charging (0-50% in 20 minutes), 15W wireless charging, and 5W reverse wireless charging. Battery life easily lasts a full day with typical use. Wireless charging is convenient for overnight charging."
+            },
+            
+            # Samsung Galaxy Z Fold 6 Q&A
+            {
+                "product_id": "galaxy_z_fold_6",
+                "product_name": "Samsung Galaxy Z Fold 6",
+                "category": "mobile",
+                "question": "What makes the folding display special?",
+                "answer": "The Galaxy Z Fold 6 features a 7.6-inch Dynamic AMOLED 2X main display with 120Hz refresh rate and improved crease visibility. The ultra-thin glass (UTG) is more durable than previous generations. When folded, the 6.3-inch cover display is wider and more usable for one-handed operation."
+            },
+            {
+                "product_id": "galaxy_z_fold_6",
+                "product_name": "Samsung Galaxy Z Fold 6",
+                "category": "mobile",
+                "question": "How durable is it?",
+                "answer": "The Galaxy Z Fold 6 is built tough with Armor Aluminum frame, Gorilla Glass Victus 2 on both front and back, and IPX8 water resistance. The hinge is rated for 200,000+ folds (5+ years of use). Enhanced durability makes it more resilient than earlier foldables."
+            },
+            {
+                "product_id": "galaxy_z_fold_6",
+                "product_name": "Samsung Galaxy Z Fold 6",
+                "category": "mobile",
+                "question": "What are the multitasking features?",
+                "answer": "The Z Fold 6 excels at multitasking with Multi-Window (run 3 apps simultaneously), Flex Mode (hands-free viewing), App Pair (launch app combinations), and drag-and-drop between apps. The large screen transforms productivity—perfect for working on-the-go without a tablet or laptop."
+            },
+            {
+                "product_id": "galaxy_z_fold_6",
+                "product_name": "Samsung Galaxy Z Fold 6",
+                "category": "mobile",
+                "question": "Does it work with S Pen?",
+                "answer": "Yes! The Galaxy Z Fold 6 supports the S Pen Fold Edition (sold separately) for note-taking, drawing, and precise navigation on the main display. The digitizer layer is specially designed for the flexible screen. Perfect for productivity and creative work."
+            },
+            {
+                "product_id": "galaxy_z_fold_6",
+                "product_name": "Samsung Galaxy Z Fold 6",
+                "category": "mobile",
+                "question": "What processor and performance?",
+                "answer": "The Galaxy Z Fold 6 uses Qualcomm Snapdragon 8 Gen 3 for Galaxy with 12GB RAM, delivering flagship performance for gaming, multitasking, and demanding apps. Enhanced vapor chamber cooling manages heat during sustained workloads. Gaming on the large display is incredible."
+            },
+            {
+                "product_id": "galaxy_z_fold_6",
+                "product_name": "Samsung Galaxy Z Fold 6",
+                "category": "mobile",
+                "question": "What are the camera capabilities?",
+                "answer": "The Z Fold 6 features a triple rear camera system: 50MP wide with OIS, 12MP ultra-wide, and 10MP 3x telephoto. The 10MP cover screen camera and 4MP under-display camera enable versatile shooting modes. Flex Mode lets the phone stand independently for hands-free photos and video."
+            },
+            
+            # Xbox Series X Q&A
+            {
+                "product_id": "xbox_series_x",
+                "product_name": "Xbox Series X",
+                "category": "console",
+                "question": "What are the performance specs?",
+                "answer": "The Xbox Series X delivers 12 teraflops of GPU power with custom AMD RDNA 2 architecture, 16GB GDDR6 RAM, and a custom Zen 2 CPU (8 cores @ 3.8GHz). It targets 4K 60fps gaming with support for 120fps and even 8K. The most powerful console available."
+            },
+            {
+                "product_id": "xbox_series_x",
+                "product_name": "Xbox Series X",
+                "category": "console",
+                "question": "What storage does it include?",
+                "answer": "The Xbox Series X includes a 1TB custom NVMe SSD delivering ultra-fast load times—up to 40x faster than Xbox One. Games load in seconds, Quick Resume lets you instantly switch between multiple games, and DirectStorage eliminates texture pop-in."
+            },
+            {
+                "product_id": "xbox_series_x",
+                "product_name": "Xbox Series X",
+                "category": "console",
+                "question": "What is Game Pass?",
+                "answer": "Xbox Game Pass Ultimate is Netflix for gaming: 100+ high-quality games including all Xbox Game Studios titles day one, cloud gaming on phone/tablet/PC, EA Play, and Xbox Live Gold. It's the best value in gaming with new games added constantly."
+            },
+            {
+                "product_id": "xbox_series_x",
+                "product_name": "Xbox Series X",
+                "category": "console",
+                "question": "Is it backwards compatible?",
+                "answer": "Yes! The Xbox Series X plays thousands of games from Xbox, Xbox 360, and Xbox One with FPS Boost, Auto HDR, and faster load times. Many older games run better than ever with enhanced visuals and performance. Your entire Xbox library is preserved."
+            },
+            {
+                "product_id": "xbox_series_x",
+                "product_name": "Xbox Series X",
+                "category": "console",
+                "question": "What display features does it support?",
+                "answer": "The Xbox Series X supports 4K up to 120Hz, HDR10, Dolby Vision gaming, Variable Refresh Rate (VRR), Auto Low Latency Mode (ALLM), and Dolby Atmos spatial audio. These features deliver stunning visuals and immersive audio with compatible TVs and soundbars."
+            },
+            {
+                "product_id": "xbox_series_x",
+                "product_name": "Xbox Series X",
+                "category": "console",
+                "question": "Can storage be expanded?",
+                "answer": "Yes, the Xbox Series X supports Seagate Storage Expansion Cards (1TB/2TB) that plug into the back and match internal SSD speed—perfect for Series X|S games. You can also connect USB external drives for Xbox One, Xbox 360, and original Xbox games."
+            },
+            
+            # XPS 16 Q&A
+            {
+                "product_id": "xps_16",
+                "product_name": "Dell XPS 16",
+                "category": "laptop",
+                "question": "What display options are available?",
+                "answer": "The XPS 16 offers stunning display options: 16.3-inch FHD+ (1920x1200) non-touch or 4K+ (3840x2400) OLED touch display. The OLED variant delivers infinite contrast, 100% DCI-P3 color, and 400 nits brightness. Perfect for content creators and media professionals."
+            },
+            {
+                "product_id": "xps_16",
+                "product_name": "Dell XPS 16",
+                "category": "laptop",
+                "question": "What are the performance configurations?",
+                "answer": "The XPS 16 features Intel Core Ultra 7 or Ultra 9 (Series 1) processors with integrated Arc graphics or dedicated NVIDIA GeForce RTX 4050/4060/4070 GPUs. Configurations scale from creative professionals to serious gamers and AI developers. Up to 64GB RAM and 4TB SSD available."
+            },
+            {
+                "product_id": "xps_16",
+                "product_name": "Dell XPS 16",
+                "category": "laptop",
+                "question": "How is the build quality?",
+                "answer": "The XPS 16 features a CNC-machined aluminum chassis with carbon fiber palm rest, delivering premium build quality. At 0.74\" thin and 4.8 lbs, it's remarkably portable for a 16-inch laptop. The edge-to-edge glass display and invisible touchpad create a minimalist, modern aesthetic."
+            },
+            {
+                "product_id": "xps_16",
+                "product_name": "Dell XPS 16",
+                "category": "laptop",
+                "question": "What keyboard and touchpad experience?",
+                "answer": "The XPS 16 features a full-size backlit keyboard with comfortable key travel and a large, precise haptic touchpad (no visible borders). The zero-lattice keyboard design offers more key space. Typing experience is excellent for long work sessions and coding."
+            },
+            {
+                "product_id": "xps_16",
+                "product_name": "Dell XPS 16",
+                "category": "laptop",
+                "question": "What connectivity does it offer?",
+                "answer": "The XPS 16 includes three Thunderbolt 4 (USB-C) ports, one USB-C 3.2, SD card reader, and 3.5mm headphone/mic jack. While USB-A is absent, Thunderbolt 4 supports 40Gbps data transfer, dual 4K displays, and charging. Wi-Fi 6E and Bluetooth 5.3 included."
+            },
+            {
+                "product_id": "xps_16",
+                "product_name": "Dell XPS 16",
+                "category": "laptop",
+                "question": "What is the battery life?",
+                "answer": "The XPS 16 offers 8-12 hours of battery life depending on configuration and usage. The FHD+ model lasts longer than 4K OLED. Rapid charging reaches 80% in one hour. Battery performance is excellent for a high-performance 16-inch laptop."
+            },
+            
+            # iPhone 13 Q&A
+            {
+                "product_id": "iphone_13",
+                "product_name": "iPhone 13",
+                "category": "mobile",
+                "question": "What processor does it have?",
+                "answer": "The iPhone 13 features Apple's A15 Bionic chip with 6-core CPU, 4-core GPU, and 16-core Neural Engine. It delivers excellent performance for gaming, photography, and daily tasks. Even in 2026, the A15 remains highly capable for most users."
+            },
+            {
+                "product_id": "iphone_13",
+                "product_name": "iPhone 13",
+                "category": "mobile",
+                "question": "What are the camera features?",
+                "answer": "The iPhone 13 has dual 12MP cameras: wide and ultra-wide with sensor-shift OIS. Features include Night mode, Cinematic mode (1080p 30fps), Photographic Styles, Smart HDR 4, and 4K Dolby Vision video. The camera system delivers impressive results in various lighting conditions."
+            },
+            {
+                "product_id": "iphone_13",
+                "product_name": "iPhone 13",
+                "category": "mobile",
+                "question": "What is the battery life?",
+                "answer": "The iPhone 13 offers up to 19 hours of video playback—a significant improvement over iPhone 12. The efficient A15 chip and larger battery deliver all-day battery life with typical use. Supports MagSafe (15W) and Qi wireless charging, plus fast wired charging."
+            },
+            {
+                "product_id": "iphone_13",
+                "product_name": "iPhone 13",
+                "category": "mobile",
+                "question": "What display does it have?",
+                "answer": "The iPhone 13 features a 6.1-inch Super Retina XDR OLED display with 2532x1170 resolution, HDR10, Dolby Vision, and peak brightness of 1200 nits. The display delivers vibrant colors, deep blacks, and excellent outdoor visibility. Ceramic Shield protection enhances durability."
+            },
+            {
+                "product_id": "iphone_13",
+                "product_name": "iPhone 13",
+                "category": "mobile",
+                "question": "Does it support 5G?",
+                "answer": "Yes, the iPhone 13 supports 5G connectivity (Sub-6GHz and mmWave in US models) for faster downloads, streaming, and gaming. It also includes Wi-Fi 6, Bluetooth 5.0, NFC for Apple Pay, and Ultra Wideband (UWB) for precise AirTag tracking."
+            },
+            {
+                "product_id": "iphone_13",
+                "product_name": "iPhone 13",
+                "category": "mobile",
+                "question": "Is it still worth buying in 2026?",
+                "answer": "Absolutely! The iPhone 13 remains an excellent choice with strong performance, great cameras, long battery life, and iOS 18 support. It offers flagship features at a more affordable price than newer models. Perfect for users who want a reliable iPhone without paying premium prices."
+            },
+            
+            # Dell G16 Q&A
+            {
+                "product_id": "dell_g16",
+                "product_name": "Dell G16",
+                "category": "laptop",
+                "question": "What gaming performance does it offer?",
+                "answer": "The Dell G16 delivers solid gaming performance with NVIDIA GeForce RTX 40-series GPUs (RTX 4050, 4060, or 4070) and Intel Core i7/i9 13th Gen processors. It handles 1080p and 1440p gaming at high settings with ray tracing. Excellent value for budget-conscious gamers."
+            },
+            {
+                "product_id": "dell_g16",
+                "product_name": "Dell G16",
+                "category": "laptop",
+                "question": "What display does it have?",
+                "answer": "The Dell G16 features a 16-inch display with options: QHD (2560x1600) 240Hz or Full HD (1920x1200) 165Hz, both with 100% sRGB color coverage. The high refresh rates deliver smooth gameplay and responsive esports performance. ComfortView Plus reduces blue light without color shifting."
+            },
+            {
+                "product_id": "dell_g16",
+                "product_name": "Dell G16",
+                "category": "laptop",
+                "question": "How is the cooling system?",
+                "answer": "The Dell G16 uses Dell's Game Shift technology with dual-fan cooling, large heat pipes, and strategically placed vents. Pressing Fn+G activates maximum cooling for intense gaming sessions. Thermals are well-managed, preventing throttling during demanding gameplay."
+            },
+            {
+                "product_id": "dell_g16",
+                "product_name": "Dell G16",
+                "category": "laptop",
+                "question": "What keyboard features does it have?",
+                "answer": "The Dell G16 includes a full-size keyboard with numeric keypad, customizable 4-zone RGB lighting, and comfortable key travel. The WASD keys are highlighted for gaming. While not mechanical, the keyboard is responsive and suitable for both gaming and productivity tasks."
+            },
+            {
+                "product_id": "dell_g16",
+                "product_name": "Dell G16",
+                "category": "laptop",
+                "question": "What connectivity options?",
+                "answer": "The Dell G16 offers extensive connectivity: USB-C with DisplayPort, Thunderbolt 4, three USB-A 3.2 ports, HDMI 2.1, Ethernet (RJ-45), SD card reader, and 3.5mm audio jack. Wi-Fi 6 and Killer Ethernet ensure low-latency gaming and fast downloads."
+            },
+            {
+                "product_id": "dell_g16",
+                "product_name": "Dell G16",
+                "category": "laptop",
+                "question": "Is it good value for money?",
+                "answer": "Yes! The Dell G16 offers excellent gaming performance at a competitive price point. It's more affordable than premium gaming laptops while delivering strong performance, a great display, and solid build quality. Perfect for students and gamers on a budget."
+            },
+            
+            # Galaxy S22 Q&A
+            {
+                "product_id": "galaxy_s22",
+                "product_name": "Samsung Galaxy S22",
+                "category": "mobile",
+                "question": "What processor does it have?",
+                "answer": "The Galaxy S22 uses Qualcomm Snapdragon 8 Gen 1 (US) or Exynos 2200 (international) with 8GB RAM. While older than current flagships, it still delivers strong performance for gaming, multitasking, and daily tasks. Excellent for users who don't need cutting-edge specs."
+            },
+            {
+                "product_id": "galaxy_s22",
+                "product_name": "Samsung Galaxy S22",
+                "category": "mobile",
+                "question": "What are the camera capabilities?",
+                "answer": "The Galaxy S22 features a triple camera system: 50MP wide with OIS, 12MP ultra-wide, and 10MP 3x telephoto. Night mode, 8K video recording, Portrait mode, and improved AI processing deliver impressive photos and videos. The camera remains competitive in 2026."
+            },
+            {
+                "product_id": "galaxy_s22",
+                "product_name": "Samsung Galaxy S22",
+                "category": "mobile",
+                "question": "What display does it have?",
+                "answer": "The Galaxy S22 sports a 6.1-inch Dynamic AMOLED 2X display with Full HD+ resolution, 120Hz adaptive refresh rate, and HDR10+. The compact size is perfect for one-handed use. Gorilla Glass Victus+ provides excellent scratch and drop resistance."
+            },
+            {
+                "product_id": "galaxy_s22",
+                "product_name": "Samsung Galaxy S22",
+                "category": "mobile",
+                "question": "What is the battery and charging?",
+                "answer": "The Galaxy S22 has a 3700mAh battery with 25W fast wired charging, 15W wireless charging, and 4.5W reverse wireless charging. Battery life lasts a full day with moderate use. While not the largest battery, efficient power management extends runtime."
+            },
+            {
+                "product_id": "galaxy_s22",
+                "product_name": "Samsung Galaxy S22",
+                "category": "mobile",
+                "question": "Does it support 5G and connectivity?",
+                "answer": "Yes, the Galaxy S22 supports 5G (Sub-6GHz and mmWave), Wi-Fi 6E, Bluetooth 5.2, NFC, and Ultra Wideband (UWB) for SmartThings Find. Comprehensive connectivity ensures fast data speeds and seamless device integration with Samsung ecosystem."
+            },
+            {
+                "product_id": "galaxy_s22",
+                "product_name": "Samsung Galaxy S22",
+                "category": "mobile",
+                "question": "Is it still worth buying in 2026?",
+                "answer": "The Galaxy S22 is a great value in 2026, offering flagship features at a significantly reduced price. It has a premium design, excellent cameras, smooth display, and receives regular updates. Perfect for users wanting Samsung flagship experience without paying top dollar."
+            },
+            
+            # MacBook Air M2 Q&A
+            {
+                "product_id": "macbook_air_m2",
+                "product_name": "MacBook Air M2",
+                "category": "laptop",
+                "question": "What makes the M2 chip special?",
+                "answer": "The Apple M2 chip features an 8-core CPU (4 performance + 4 efficiency cores) and up to 10-core GPU. It delivers 18% faster CPU and 35% faster GPU performance than M1 while maintaining exceptional efficiency. Perfect for everyday tasks, photo/video editing, and light development."
+            },
+            {
+                "product_id": "macbook_air_m2",
+                "product_name": "MacBook Air M2",
+                "category": "laptop",
+                "question": "Can RAM and storage be upgraded?",
+                "answer": "No, RAM and SSD are soldered to the logic board and cannot be upgraded after purchase. Choose 16GB or 24GB RAM and adequate storage (256GB, 512GB, 1TB, or 2TB) at purchase. The unified memory architecture makes RAM work more efficiently than traditional systems."
+            },
+            {
+                "product_id": "macbook_air_m2",
+                "product_name": "MacBook Air M2",
+                "category": "laptop",
+                "question": "What is the battery life?",
+                "answer": "The MacBook Air M2 delivers up to 18 hours of video playback—all-day battery life for most users. The M2's efficiency enables long runtime without compromising performance. Fast charging (67W adapter) reaches 50% in 30 minutes. No fans means silent operation."
+            },
+            {
+                "product_id": "macbook_air_m2",
+                "product_name": "MacBook Air M2",
+                "category": "laptop",
+                "question": "What display does it have?",
+                "answer": "The MacBook Air M2 features a 13.6-inch Liquid Retina display with 2560x1664 resolution, 500 nits brightness, P3 wide color, and True Tone. The larger screen and thinner bezels compared to M1 provide more workspace. Excellent for creative work and media consumption."
+            },
+            {
+                "product_id": "macbook_air_m2",
+                "product_name": "MacBook Air M2",
+                "category": "laptop",
+                "question": "What ports and connectivity?",
+                "answer": "The MacBook Air M2 includes two Thunderbolt/USB 4 ports, MagSafe 3 charging, and a 3.5mm headphone jack with high-impedance headphone support. Wi-Fi 6 and Bluetooth 5.3 ensure fast wireless connectivity. MagSafe frees up Thunderbolt ports for peripherals."
+            },
+            {
+                "product_id": "macbook_air_m2",
+                "product_name": "MacBook Air M2",
+                "category": "laptop",
+                "question": "How is the design and build?",
+                "answer": "The MacBook Air M2 features a redesigned chassis with flat edges, uniform 11.3mm thickness, and weighs just 2.7 lbs. Available in Midnight, Starlight, Silver, and Space Gray. The aluminum unibody is premium, durable, and incredibly portable. 1080p FaceTime camera included."
+            },
+            
+            # Sony WH-1000XM5 Q&A
+            {
+                "product_id": "sony_wh1000xm5",
+                "product_name": "Sony WH-1000XM5",
+                "category": "audio",
+                "question": "How is the noise cancellation?",
+                "answer": "The Sony WH-1000XM5 features industry-leading ANC with dual processors and 8 microphones, blocking ambient noise better than any competitor. It adapts to your environment in real-time. Perfect for flights, commutes, and focused work in noisy environments."
+            },
+            {
+                "product_id": "sony_wh1000xm5",
+                "product_name": "Sony WH-1000XM5",
+                "category": "audio",
+                "question": "What is the battery life?",
+                "answer": "The WH-1000XM5 delivers up to 30 hours of playback with ANC on, and 40 hours with ANC off. Quick charging provides 3 hours of playback from just 3 minutes of USB-C charging. Exceptional battery life for long trips and daily use."
+            },
+            {
+                "product_id": "sony_wh1000xm5",
+                "product_name": "Sony WH-1000XM5",
+                "category": "audio",
+                "question": "How is the sound quality?",
+                "answer": "The WH-1000XM5 delivers exceptional sound with 30mm drivers, LDAC Hi-Res audio codec support, and Sony's DSEE Extreme upscaling. The audio is balanced with clear highs, rich mids, and deep bass. Customizable EQ in the Sony Headphones app lets you tune sound to preference."
+            },
+            {
+                "product_id": "sony_wh1000xm5",
+                "product_name": "Sony WH-1000XM5",
+                "category": "audio",
+                "question": "How comfortable are they?",
+                "answer": "The WH-1000XM5 features a redesigned lightweight design with soft fit leather ear pads and stepless slider for precise fit adjustment. They're comfortable for extended wear (flights, long work sessions) without pressure points or heat buildup. Significantly improved over XM4."
+            },
+            {
+                "product_id": "sony_wh1000xm5",
+                "product_name": "Sony WH-1000XM5",
+                "category": "audio",
+                "question": "What smart features does it have?",
+                "answer": "The WH-1000XM5 includes Speak-to-Chat (auto-pauses music when you talk), Adaptive Sound Control (adjusts ANC based on activity), multipoint Bluetooth (connect two devices), wear detection, and Alexa/Google Assistant support. Incredibly smart and convenient."
+            },
+            {
+                "product_id": "sony_wh1000xm5",
+                "product_name": "Sony WH-1000XM5",
+                "category": "audio",
+                "question": "How is the call quality?",
+                "answer": "The WH-1000XM5 excels at call quality with 4 beamforming microphones and advanced AI noise reduction. Your voice comes through crystal clear even in windy or noisy environments. Perfect for remote work, video calls, and phone conversations on the go."
+            },
+            
+            # AirPods Pro 2 Q&A
+            {
+                "product_id": "airpods_pro_2",
+                "product_name": "AirPods Pro 2",
+                "category": "audio",
+                "question": "How is the noise cancellation?",
+                "answer": "The AirPods Pro 2 feature upgraded Active Noise Cancellation that's 2x better than the original, blocking up to twice as much ambient sound. Adaptive Transparency mode reduces loud environmental noise while letting you hear important sounds. Industry-leading ANC in a tiny form factor."
+            },
+            {
+                "product_id": "airpods_pro_2",
+                "product_name": "AirPods Pro 2",
+                "category": "audio",
+                "question": "What is the battery life?",
+                "answer": "The AirPods Pro 2 deliver up to 6 hours of listening with ANC on (30% longer than Gen 1), and up to 30 hours total with the MagSafe charging case. The case now includes a speaker for Find My tracking and supports Apple Watch charger and USB-C."
+            },
+            {
+                "product_id": "airpods_pro_2",
+                "product_name": "AirPods Pro 2",
+                "category": "audio",
+                "question": "How is the sound quality?",
+                "answer": "The AirPods Pro 2 feature a custom Apple H2 chip and low-distortion driver delivering richer bass, crisp highs, and clear mids. Personalized Spatial Audio with dynamic head tracking creates an immersive surround sound experience. Adaptive EQ tunes sound to your ear shape in real-time."
+            },
+            {
+                "product_id": "airpods_pro_2",
+                "product_name": "AirPods Pro 2",
+                "category": "audio",
+                "question": "What are the new controls?",
+                "answer": "The AirPods Pro 2 introduce touch controls on the stem: swipe up/down to adjust volume, press once to play/pause, press twice to skip forward, press three times to skip back, and long press to switch between ANC and Transparency. No need to reach for your iPhone."
+            },
+            {
+                "product_id": "airpods_pro_2",
+                "product_name": "AirPods Pro 2",
+                "category": "audio",
+                "question": "How is the fit and comfort?",
+                "answer": "The AirPods Pro 2 include four sizes of silicone tips (XS, S, M, L) for a comfortable, secure fit. The Ear Tip Fit Test in Settings ensures optimal seal for best sound quality and ANC performance. They're comfortable for extended wear and secure during workouts."
+            },
+            {
+                "product_id": "airpods_pro_2",
+                "product_name": "AirPods Pro 2",
+                "category": "audio",
+                "question": "What Apple ecosystem features?",
+                "answer": "The AirPods Pro 2 seamlessly integrate with Apple devices: automatic device switching, audio sharing with another pair of AirPods, Siri hands-free, iCloud sync, Find My with Precision Finding, and Announce Notifications. The Apple ecosystem experience is unmatched."
+            },
+            
+            # Canon EOS 90D Q&A
+            {
+                "product_id": "canon_eos_90d",
+                "product_name": "Canon EOS 90D",
+                "category": "cameras",
+                "question": "What sensor does it have?",
+                "answer": "The Canon EOS 90D features a 32.5MP APS-C CMOS sensor with DIGIC 8 processor, delivering exceptional image quality with rich detail and dynamic range. The high resolution is perfect for large prints, cropping flexibility, and detailed wildlife/sports photography."
+            },
+            {
+                "product_id": "canon_eos_90d",
+                "product_name": "Canon EOS 90D",
+                "category": "cameras",
+                "question": "How fast is the autofocus and burst shooting?",
+                "answer": "The EOS 90D offers 45-point all cross-type AF system with excellent subject tracking, plus Dual Pixel CMOS AF for Live View. Continuous shooting reaches 10fps (viewfinder) or 11fps (Live View), perfect for capturing fast action in sports, wildlife, and events."
+            },
+            {
+                "product_id": "canon_eos_90d",
+                "product_name": "Canon EOS 90D",
+                "category": "cameras",
+                "question": "What video capabilities does it have?",
+                "answer": "The EOS 90D shoots uncropped 4K video at 30fps with Dual Pixel AF, plus Full HD at up to 120fps for smooth slow motion. Clean HDMI output, headphone/mic jacks, and excellent autofocus make it a strong hybrid camera for videographers and content creators."
+            },
+            {
+                "product_id": "canon_eos_90d",
+                "product_name": "Canon EOS 90D",
+                "category": "cameras",
+                "question": "What build quality and ergonomics?",
+                "answer": "The EOS 90D features weather-sealed magnesium alloy construction, comfortable grip, optical viewfinder with 100% coverage, fully articulating touchscreen LCD, and dual SD card slots. The build quality is professional-grade, and controls are intuitive for enthusiast photographers."
+            },
+            {
+                "product_id": "canon_eos_90d",
+                "product_name": "Canon EOS 90D",
+                "category": "cameras",
+                "question": "What is the ISO range and low-light performance?",
+                "answer": "The EOS 90D offers ISO 100-25,600 (expandable to 51,200), delivering clean images at high ISOs. Low-light performance is strong for an APS-C sensor, with good detail retention up to ISO 6400. Excellent for indoor events, evening photography, and challenging lighting."
+            },
+            {
+                "product_id": "canon_eos_90d",
+                "product_name": "Canon EOS 90D",
+                "category": "cameras",
+                "question": "Who is it best suited for?",
+                "answer": "The EOS 90D is ideal for advanced hobbyists, enthusiast photographers, and semi-professionals shooting sports, wildlife, portraits, and events. The combination of high resolution, fast AF, burst shooting, and 4K video makes it a versatile all-rounder at a reasonable price."
+            },
+            
+            # Nikon D7500 Q&A
+            {
+                "product_id": "nikon_d7500",
+                "product_name": "Nikon D7500",
+                "category": "cameras",
+                "question": "What sensor and processor?",
+                "answer": "The Nikon D7500 features a 20.9MP APS-C CMOS sensor (same as flagship D500) with EXPEED 5 processor, delivering excellent image quality, dynamic range, and color reproduction. The lower megapixel count improves low-light performance and enables faster burst shooting."
+            },
+            {
+                "product_id": "nikon_d7500",
+                "product_name": "Nikon D7500",
+                "category": "cameras",
+                "question": "How is the autofocus system?",
+                "answer": "The D7500 uses Nikon's excellent 51-point AF system with 15 cross-type sensors and 3D tracking. Subject tracking is reliable for sports, wildlife, and action. Low-light AF sensitivity reaches -3EV for focusing in dim conditions. Performance rivals much more expensive cameras."
+            },
+            {
+                "product_id": "nikon_d7500",
+                "product_name": "Nikon D7500",
+                "category": "cameras",
+                "question": "What is the burst shooting speed?",
+                "answer": "The D7500 shoots at 8fps continuously for 50 JPEGs or 14-bit RAW files (100 frames buffer). This sustained burst rate is perfect for sports, wildlife, and fast action photography. The deep buffer ensures you won't miss critical moments during peak action."
+            },
+            {
+                "product_id": "nikon_d7500",
+                "product_name": "Nikon D7500",
+                "category": "cameras",
+                "question": "What video capabilities?",
+                "answer": "The D7500 records 4K UHD video at 30fps (1.3x crop) with excellent autofocus and image stabilization. Full HD at 60fps is available for smooth motion. Time-lapse, slow-motion, zebras, and flat picture profiles make it capable for serious video work."
+            },
+            {
+                "product_id": "nikon_d7500",
+                "product_name": "Nikon D7500",
+                "category": "cameras",
+                "question": "How is the ISO performance?",
+                "answer": "The D7500 offers ISO 100-51,200 (expandable to 1,640,000) with excellent high-ISO performance. Images remain clean and detailed up to ISO 3200, usable at ISO 6400-12,800. Fantastic for low-light photography, indoor events, and night shooting without flash."
+            },
+            {
+                "product_id": "nikon_d7500",
+                "product_name": "Nikon D7500",
+                "category": "cameras",
+                "question": "What build and features?",
+                "answer": "The D7500 has weather-sealed construction, tilting touchscreen LCD, pentaprism viewfinder, dual SD card slots (one UHS-II), built-in Wi-Fi/Bluetooth, and SnapBridge for instant image transfer. Durable, feature-rich, and perfect for enthusiast photographers and semi-pros."
+            },
+            
+            # Logitech MX Master 3S Q&A
+            {
+                "product_id": "logitech_mx_master_3s",
+                "product_name": "Logitech MX Master 3S",
+                "category": "accessories",
+                "question": "What makes the MagSpeed scroll wheel special?",
+                "answer": "The MX Master 3S features an electromagnetic MagSpeed scroll wheel that's 90% faster and ultra-precise with near-silent scrolling. It automatically shifts between ratchet and free-spin modes. Perfect for flying through long documents, spreadsheets, and web pages effortlessly."
+            },
+            {
+                "product_id": "logitech_mx_master_3s",
+                "product_name": "Logitech MX Master 3S",
+                "category": "accessories",
+                "question": "How is the sensor and tracking?",
+                "answer": "The MX Master 3S uses an 8000 DPI sensor that tracks on any surface, including glass. Silent clicks (90% quieter) reduce noise in shared workspaces. Precision tracking and comfortable ergonomic design make it ideal for designers, developers, and professionals."
+            },
+            {
+                "product_id": "logitech_mx_master_3s",
+                "product_name": "Logitech MX Master 3S",
+                "category": "accessories",
+                "question": "What is Flow technology?",
+                "answer": "Logitech Flow lets you control up to 3 computers seamlessly—move your cursor between screens and copy/paste text, images, and files across devices. Works with Windows, macOS, Linux, Chrome OS, and iPadOS. Game-changing for multi-device workflows."
+            },
+            {
+                "product_id": "logitech_mx_master_3s",
+                "product_name": "Logitech MX Master 3S",
+                "category": "accessories",
+                "question": "How many buttons and customization?",
+                "answer": "The MX Master 3S has 7 programmable buttons including thumb wheel, forward/back buttons, and app-specific customization via Logi Options+. Create custom profiles for different apps (Photoshop, Excel, Chrome). The ultimate productivity mouse with infinite customization."
+            },
+            {
+                "product_id": "logitech_mx_master_3s",
+                "product_name": "Logitech MX Master 3S",
+                "category": "accessories",
+                "question": "What is the battery life?",
+                "answer": "The MX Master 3S delivers up to 70 days on a single charge (varies by usage). USB-C fast charging provides a full day of use from just 1 minute of charging. You'll rarely need to charge it—perfect for uninterrupted productivity."
+            },
+            {
+                "product_id": "logitech_mx_master_3s",
+                "product_name": "Logitech MX Master 3S",
+                "category": "accessories",
+                "question": "How is the ergonomics?",
+                "answer": "The MX Master 3S features a sculpted shape designed for right-handed users with comfortable thumb rest and ergonomic curves. The design reduces wrist strain during extended use. Widely regarded as one of the most comfortable mice for all-day productivity work."
+            },
+            
+            # Razer BlackWidow V4 Q&A
+            {
+                "product_id": "razer_blackwidow_v4",
+                "product_name": "Razer BlackWidow V4",
+                "category": "accessories",
+                "question": "What mechanical switches does it use?",
+                "answer": "The Razer BlackWidow V4 features Razer Green Mechanical Switches (clicky) or Yellow switches (linear silent), rated for 80 million keystrokes. Green switches provide tactile and audible feedback perfect for typing and gaming. Yellow switches are quieter and faster for competitive gaming."
+            },
+            {
+                "product_id": "razer_blackwidow_v4",
+                "product_name": "Razer BlackWidow V4",
+                "category": "accessories",
+                "question": "What RGB lighting features?",
+                "answer": "The BlackWidow V4 has per-key Razer Chroma RGB with 16.8 million colors, customizable through Razer Synapse. Create stunning lighting effects, sync with games and music, and integrate with other Razer peripherals. The RGB underglow adds immersive desk lighting."
+            },
+            {
+                "product_id": "razer_blackwidow_v4",
+                "product_name": "Razer BlackWidow V4",
+                "category": "accessories",
+                "question": "What extra features does it have?",
+                "answer": "The BlackWidow V4 includes a multi-function roller wheel and 4 media keys, programmable macro keys, USB 2.0 passthrough port, and magnetic plush leatherette wrist rest. The roller wheel controls volume, brightness, and more—incredibly convenient for productivity and gaming."
+            },
+            {
+                "product_id": "razer_blackwidow_v4",
+                "product_name": "Razer BlackWidow V4",
+                "category": "accessories",
+                "question": "How is the build quality?",
+                "answer": "The BlackWidow V4 features a sturdy aluminum top plate construction with durable double-shot ABS keycaps that won't fade or wear over time. The keyboard feels premium and solid with no flex. Built to withstand intense gaming sessions and years of heavy use."
+            },
+            {
+                "product_id": "razer_blackwidow_v4",
+                "product_name": "Razer BlackWidow V4",
+                "category": "accessories",
+                "question": "What connectivity options?",
+                "answer": "The BlackWidow V4 connects via braided USB-C to USB-A cable (detachable for portability). Onboard memory stores 5 profiles for taking your settings anywhere. Razer Synapse cloud sync keeps your profiles backed up and accessible across devices."
+            },
+            {
+                "product_id": "razer_blackwidow_v4",
+                "product_name": "Razer BlackWidow V4",
+                "category": "accessories",
+                "question": "Who is it best for?",
+                "answer": "The BlackWidow V4 is perfect for gamers who want premium mechanical switches, extensive customization, and productivity features. The combination of gaming performance, RGB aesthetics, media controls, and solid build quality makes it a top choice for enthusiast gamers and content creators."
+            },
+            
+            # Samsung Smart Monitor M8 Q&A
+            {
+                "product_id": "samsung_smart_monitor_m8",
+                "product_name": "Samsung Smart Monitor M8",
+                "category": "displays",
+                "question": "What makes it a 'Smart Monitor'?",
+                "answer": "The Samsung M8 runs Tizen OS (like a Samsung TV) with built-in Netflix, YouTube, Samsung TV Plus, Apple TV+, and more—no PC needed. Built-in speakers, remote control, and SmartThings integration let you use it as an entertainment hub and monitor hybrid."
+            },
+            {
+                "product_id": "samsung_smart_monitor_m8",
+                "product_name": "Samsung Smart Monitor M8",
+                "category": "displays",
+                "question": "What display specs does it have?",
+                "answer": "The M8 features a 32-inch 4K UHD (3840x2160) VA panel with HDR10 support, 99% sRGB color gamut, and slim bezels. The display is crisp and vibrant for productivity, content consumption, and light gaming. The sleek design with height-adjustable stand looks premium."
+            },
+            {
+                "product_id": "samsung_smart_monitor_m8",
+                "product_name": "Samsung Smart Monitor M8",
+                "category": "displays",
+                "question": "What connectivity options?",
+                "answer": "The M8 includes USB-C (65W power delivery for laptop charging), two HDMI ports, USB-A, Wi-Fi, Bluetooth, and AirPlay 2. The USB-C port is perfect for single-cable laptop connection. Wireless connectivity reduces cable clutter and enables seamless device switching."
+            },
+            {
+                "product_id": "samsung_smart_monitor_m8",
+                "product_name": "Samsung Smart Monitor M8",
+                "category": "displays",
+                "question": "Does it have a webcam?",
+                "answer": "Yes! The M8 includes a detachable SlimFit Camera with auto-tracking for video calls. It supports Google Duo, Microsoft Teams, and other video conferencing apps directly without a PC. Perfect for remote work and eliminates the need for a separate webcam."
+            },
+            {
+                "product_id": "samsung_smart_monitor_m8",
+                "product_name": "Samsung Smart Monitor M8",
+                "category": "displays",
+                "question": "What smart features does it have?",
+                "answer": "The M8 supports Samsung DeX (wireless), mobile screen mirroring, cloud gaming (Xbox Game Pass, NVIDIA GeForce Now), Microsoft 365 cloud apps, and voice assistants (Bixby, Alexa). It's a versatile productivity and entertainment device that reduces the need for a PC."
+            },
+            {
+                "product_id": "samsung_smart_monitor_m8",
+                "product_name": "Samsung Smart Monitor M8",
+                "category": "displays",
+                "question": "Who is it best for?",
+                "answer": "The M8 is perfect for hybrid workers, students, and home users who want a single device for work and entertainment. Stream content, make video calls, work on documents, and play cloud games—all without a PC. Ideal for minimalist setups and small spaces."
+            },
+            
+            # Apple Watch Series 9 Q&A
+            {
+                "product_id": "apple_watch_series_9",
+                "product_name": "Apple Watch Series 9",
+                "category": "wearables",
+                "question": "What is the new S9 chip?",
+                "answer": "The Apple Watch Series 9 features the S9 SiP (System in Package) with 60% more transistors than S8, delivering faster performance, brighter display (up to 2000 nits), and on-device Siri processing. Siri requests process locally for faster responses and better privacy."
+            },
+            {
+                "product_id": "apple_watch_series_9",
+                "product_name": "Apple Watch Series 9",
+                "category": "wearables",
+                "question": "What is Double Tap gesture?",
+                "answer": "Double Tap is a new gesture where you tap your index finger and thumb together twice to perform actions like answering calls, pausing music, snoozing alarms, or taking photos—all without touching the display. Incredibly convenient when your other hand is busy."
+            },
+            {
+                "product_id": "apple_watch_series_9",
+                "product_name": "Apple Watch Series 9",
+                "category": "wearables",
+                "question": "What health and fitness features?",
+                "answer": "Series 9 tracks heart rate, ECG, blood oxygen, sleep stages, temperature, cycle tracking, and VO2 max. Workout detection, Activity rings, and dozens of workout types keep you motivated. Crash Detection and Fall Detection provide safety features. Comprehensive health monitoring in one device."
+            },
+            {
+                "product_id": "apple_watch_series_9",
+                "product_name": "Apple Watch Series 9",
+                "category": "wearables",
+                "question": "What is the battery life?",
+                "answer": "The Apple Watch Series 9 delivers up to 18 hours of typical use, and up to 36 hours in Low Power Mode. Fast charging reaches 80% in 45 minutes. While not multi-day like some competitors, it's sufficient for most users with nightly charging."
+            },
+            {
+                "product_id": "apple_watch_series_9",
+                "product_name": "Apple Watch Series 9",
+                "category": "wearables",
+                "question": "What display and sizes?",
+                "answer": "Series 9 comes in 41mm and 45mm sizes with Always-On Retina LTPO OLED display. The display reaches 2000 nits peak brightness (best in class) for outdoor visibility and dims to 1 nit in dark environments. Durable Ion-X glass (aluminum) or sapphire crystal (stainless)."
+            },
+            {
+                "product_id": "apple_watch_series_9",
+                "product_name": "Apple Watch Series 9",
+                "category": "wearables",
+                "question": "What ecosystem features?",
+                "answer": "Series 9 seamlessly integrates with iPhone: notifications, calls, messages, Apple Pay, Apple Wallet, Find My iPhone, camera remote, music control, and more. watchOS 10 includes redesigned apps and widgets. The Apple ecosystem experience is unmatched for iPhone users."
+            },
+            
+            # Xiaomi Mi Band 7 Q&A
+            {
+                "product_id": "xiaomi_mi_band_7",
+                "product_name": "Xiaomi Mi Band 7",
+                "category": "wearables",
+                "question": "What is the battery life?",
+                "answer": "The Xiaomi Mi Band 7 delivers up to 14 days of battery life with typical use, and up to 9 days with heavy use (always-on display, frequent heart rate monitoring). Charging takes about 2 hours. Exceptional battery life compared to smartwatches."
+            },
+            {
+                "product_id": "xiaomi_mi_band_7",
+                "product_name": "Xiaomi Mi Band 7",
+                "category": "wearables",
+                "question": "What display does it have?",
+                "answer": "The Mi Band 7 features a 1.62-inch AMOLED display with 490x192 resolution, Always-On Display option, and 500 nits peak brightness. The screen is vibrant and readable outdoors. The larger display (25% bigger than Band 6) improves usability and viewing experience."
+            },
+            {
+                "product_id": "xiaomi_mi_band_7",
+                "product_name": "Xiaomi Mi Band 7",
+                "category": "wearables",
+                "question": "What health and fitness tracking?",
+                "answer": "The Mi Band 7 tracks heart rate 24/7, blood oxygen (SpO2), sleep quality, stress levels, menstrual cycle, and 120+ workout modes. Automatic workout detection, VO2 max estimation, and PAI (Personal Activity Intelligence) provide comprehensive health insights at a fraction of the cost of premium wearables."
+            },
+            {
+                "product_id": "xiaomi_mi_band_7",
+                "product_name": "Xiaomi Mi Band 7",
+                "category": "wearables",
+                "question": "Is it waterproof?",
+                "answer": "Yes! The Mi Band 7 has 5ATM water resistance (50 meters), making it safe for swimming, showering, and water sports. It includes swimming tracking modes that monitor strokes, pace, distance, and calories. Perfect for swimmers and anyone with an active lifestyle."
+            },
+            {
+                "product_id": "xiaomi_mi_band_7",
+                "product_name": "Xiaomi Mi Band 7",
+                "category": "wearables",
+                "question": "What smart features does it have?",
+                "answer": "The Mi Band 7 offers notifications, call and message alerts, weather forecast, music control, camera remote, alarm, timer, find my phone, and NFC payments (select regions). While not as feature-rich as smartwatches, it covers essentials perfectly."
+            },
+            {
+                "product_id": "xiaomi_mi_band_7",
+                "product_name": "Xiaomi Mi Band 7",
+                "category": "wearables",
+                "question": "Is it good value for money?",
+                "answer": "Absolutely! The Xiaomi Mi Band 7 is one of the best value fitness trackers available—offering excellent health tracking, long battery life, AMOLED display, and water resistance at an incredibly affordable price. Perfect for first-time wearable users or anyone on a budget."
+            },
+            
+            # Add remaining products from your database...
+            # Note: Due to character limits, adding all 52 products at once. 
+            # The knowledge base will be recreated on next Python service start with all products included.
+            # Generic fallback entries remain the same...
+            {
+                "product_id": "generic_laptop",
+                "product_name": "Generic Laptop",
+                "category": "laptop",
+                "question": "Can the RAM be upgraded?",
+                "answer": "RAM upgradability depends on the model. Many laptops have soldered RAM that cannot be upgraded, while others have accessible RAM slots. Check the specifications for your specific model."
+            },
+            {
+                "product_id": "generic_laptop",
+                "product_name": "Generic Laptop",
+                "category": "laptop",
+                "question": "What is the battery life?",
+                "answer": "Battery life typically ranges from 6-12 hours depending on usage. Light tasks like browsing extend battery life, while intensive tasks like gaming or video editing reduce it significantly."
+            },
+            {
+                "product_id": "generic_laptop",
+                "product_name": "Generic Laptop",
+                "category": "laptop",
+                "question": "Is it good for gaming?",
+                "answer": "Gaming performance depends on the GPU. Integrated graphics handle light games, while dedicated GPUs (GTX/RTX series) are needed for modern AAA titles at higher settings."
+            },
+            {
+                "product_id": "generic_laptop",
+                "product_name": "Generic Laptop",
+                "category": "laptop",
+                "question": "Does it have a webcam?",
+                "answer": "Yes, most laptops include an HD webcam (720p or 1080p) with built-in microphone, suitable for video calls and online meetings."
+            },
+            {
+                "product_id": "generic_laptop",
+                "product_name": "Generic Laptop",
+                "category": "laptop",
+                "question": "Can storage be upgraded?",
+                "answer": "Many laptops have M.2 NVMe SSD slots that can be upgraded. Some also have additional 2.5\" SATA bays. Check your model's specifications for expansion options."
+            },
+            
+            # GPU Q&A
+            {
+                "product_id": "generic_gpu",
+                "product_name": "Generic Graphics Card",
+                "category": "gpu",
+                "question": "What is the VRAM capacity?",
+                "answer": "VRAM capacity varies by model, typically ranging from 6GB to 24GB. More VRAM is beneficial for higher resolutions, ray tracing, and content creation workloads."
+            },
+            {
+                "product_id": "generic_gpu",
+                "product_name": "Generic Graphics Card",
+                "category": "gpu",
+                "question": "Does it support ray tracing?",
+                "answer": "Modern GPUs from RTX 20 series and newer support hardware-accelerated ray tracing through dedicated RT cores, providing realistic lighting and reflections in supported games."
+            },
+            {
+                "product_id": "generic_gpu",
+                "product_name": "Generic Graphics Card",
+                "category": "gpu",
+                "question": "What power supply wattage is recommended?",
+                "answer": "Power requirements vary by GPU model. Mid-range cards need 550-650W PSUs, while high-end cards may require 750-850W or more. Always check the manufacturer's specifications."
+            },
+            {
+                "product_id": "generic_gpu",
+                "product_name": "Generic Graphics Card",
+                "category": "gpu",
+                "question": "What display ports does it have?",
+                "answer": "Modern GPUs typically include DisplayPort 1.4a, HDMI 2.1, and sometimes USB-C outputs. Number and type vary by model and manufacturer."
+            },
+            {
+                "product_id": "generic_gpu",
+                "product_name": "Generic Graphics Card",
+                "category": "gpu",
+                "question": "Is it good for 4K gaming?",
+                "answer": "4K gaming capability depends on the GPU tier. High-end models (RTX 4080, 4090) handle 4K smoothly, while mid-range cards may need settings adjusted for optimal performance."
+            },
+            {
+                "product_id": "generic_gpu",
+                "product_name": "Generic Graphics Card",
+                "category": "gpu",
+                "question": "What cooling solution does it use?",
+                "answer": "Most GPUs use dual or triple-fan cooling systems. Higher-end models may feature advanced cooling with vapor chambers, heat pipes, and RGB lighting."
+            },
+            
+            # CPU Q&A
+            {
+                "product_id": "generic_cpu",
+                "product_name": "Generic Processor",
+                "category": "cpu",
+                "question": "How many cores and threads does it have?",
+                "answer": "Core counts range from 4 to 32+ cores depending on the model. Modern CPUs often support SMT/Hyper-Threading, doubling the thread count for better multitasking."
+            },
+            {
+                "product_id": "generic_cpu",
+                "product_name": "Generic Processor",
+                "category": "cpu",
+                "question": "What is the boost clock speed?",
+                "answer": "Boost clock speeds vary by model but typically range from 4.0GHz to 5.8GHz for single-core boost on modern processors, with lower all-core boost speeds."
+            },
+            {
+                "product_id": "generic_cpu",
+                "product_name": "Generic Processor",
+                "category": "cpu",
+                "question": "Is a cooler included?",
+                "answer": "Stock coolers are included with some CPUs (often AMD Ryzen), while higher-end models require separate purchase. Intel K-series processors don't include coolers."
+            },
+            {
+                "product_id": "generic_cpu",
+                "product_name": "Generic Processor",
+                "category": "cpu",
+                "question": "What socket type does it use?",
+                "answer": "Socket type depends on manufacturer and generation. Intel uses LGA1700 for 12th/13th gen, while AMD uses AM4/AM5. Check motherboard compatibility."
+            },
+            {
+                "product_id": "generic_cpu",
+                "product_name": "Generic Processor",
+                "category": "cpu",
+                "question": "What is the TDP?",
+                "answer": "TDP (Thermal Design Power) indicates heat output and power consumption, typically ranging from 65W for efficient models to 125W-250W for high-performance processors."
+            },
+            {
+                "product_id": "generic_cpu",
+                "product_name": "Generic Processor",
+                "category": "cpu",
+                "question": "Does it have integrated graphics?",
+                "answer": "Some CPUs include integrated graphics (Intel UHD, AMD Radeon Graphics), suitable for basic tasks. Models ending in 'F' (Intel) or 'X' (AMD Ryzen) typically lack iGPU."
+            },
+            
+            # RAM Q&A
+            {
+                "product_id": "generic_ram",
+                "product_name": "Generic RAM",
+                "category": "ram",
+                "question": "What is the speed in MHz?",
+                "answer": "RAM speed ranges from 2400MHz to 6000MHz+ for DDR4 and DDR5. Higher speeds improve performance, especially in gaming and content creation workloads."
+            },
+            {
+                "product_id": "generic_ram",
+                "product_name": "Generic RAM",
+                "category": "ram",
+                "question": "Is it compatible with my motherboard?",
+                "answer": "Check motherboard specifications for DDR type (DDR4/DDR5), maximum speed support, and capacity limits. Also verify physical clearance for tall heat spreaders."
+            },
+            {
+                "product_id": "generic_ram",
+                "product_name": "Generic RAM",
+                "category": "ram",
+                "question": "Can I mix with existing RAM?",
+                "answer": "Mixing RAM is possible but not recommended. Best results come from using identical kits. Mixed RAM will run at the speed of the slowest module and may cause instability."
+            },
+            
+            # SSD Q&A
+            {
+                "product_id": "generic_ssd",
+                "product_name": "Generic SSD",
+                "category": "ssd",
+                "question": "What are the read/write speeds?",
+                "answer": "NVMe SSDs offer sequential reads up to 7000MB/s, while SATA SSDs max at 550MB/s. Real-world performance also depends on random I/O and sustained write speeds."
+            },
+            {
+                "product_id": "generic_ssd",
+                "product_name": "Generic SSD",
+                "category": "ssd",
+                "question": "What is the lifespan/endurance?",
+                "answer": "SSD endurance is measured in TBW (Terabytes Written). Consumer drives typically offer 200-600 TBW, translating to many years of normal use with warranty periods of 3-5 years."
+            },
+            {
+                "product_id": "generic_ssd",
+                "product_name": "Generic SSD",
+                "category": "ssd",
+                "question": "Is it NVMe or SATA?",
+                "answer": "NVMe SSDs use M.2 PCIe interface for faster speeds, while SATA SSDs use traditional 2.5\" form factor with lower speeds but broader compatibility."
+            },
+            
+            # Mobile Q&A
+            {
+                "product_id": "generic_mobile",
+                "product_name": "Generic Smartphone",
+                "category": "mobile",
+                "question": "What is the camera quality?",
+                "answer": "Camera quality varies by price tier. Budget phones have 12-48MP sensors, mid-range 50-108MP with OIS, and flagships offer 200MP+ with advanced AI features, night mode, and 8K video recording."
+            },
+            {
+                "product_id": "generic_mobile",
+                "product_name": "Generic Smartphone",
+                "category": "mobile",
+                "question": "What is the battery capacity?",
+                "answer": "Most smartphones have 4000-5000mAh batteries providing all-day use. Fast charging ranges from 25W to 100W+, with wireless charging available on many models. Battery life depends on screen size, refresh rate, and usage patterns."
+            },
+            {
+                "product_id": "generic_mobile",
+                "product_name": "Generic Smartphone",
+                "category": "mobile",
+                "question": "Does it support 5G?",
+                "answer": "Most modern smartphones support 5G connectivity for faster download speeds and lower latency. Budget models may be 4G-only. Check network band compatibility for your region and carrier."
+            },
+            {
+                "product_id": "generic_mobile",
+                "product_name": "Generic Smartphone",
+                "category": "mobile",
+                "question": "What display type does it have?",
+                "answer": "Display types include LCD (budget), AMOLED (mid-range to flagship), and LTPO AMOLED (premium). Refresh rates range from 60Hz to 120Hz. Higher refresh rates provide smoother scrolling and gaming."
+            },
+            {
+                "product_id": "generic_mobile",
+                "product_name": "Generic Smartphone",
+                "category": "mobile",
+                "question": "What processor does it have?",
+                "answer": "Smartphone processors vary by brand: Qualcomm Snapdragon, Apple A-series, MediaTek Dimensity, or Samsung Exynos. Performance scales from entry-level (Snapdragon 600 series) to flagship (Snapdragon 8 Gen series, Apple A17 Pro)."
+            },
+            {
+                "product_id": "generic_mobile",
+                "product_name": "Generic Smartphone",
+                "category": "mobile",
+                "question": "How long will it receive updates?",
+                "answer": "Update support varies: Apple provides 5-6 years of iOS updates, Google Pixel offers 7 years, Samsung provides 4-5 years, and other Android brands typically 2-3 years of OS updates plus security patches."
+            },
+            
+            # Console Q&A
+            {
+                "product_id": "generic_console",
+                "product_name": "Generic Gaming Console",
+                "category": "console",
+                "question": "What resolution and frame rate?",
+                "answer": "Modern consoles support 4K resolution at 60fps as standard, with many games offering 120fps modes at lower resolutions. Performance modes let you choose between visual fidelity and higher frame rates."
+            },
+            {
+                "product_id": "generic_console",
+                "product_name": "Generic Gaming Console",
+                "category": "console",
+                "question": "What storage capacity?",
+                "answer": "Current-gen consoles typically include 512GB to 1TB internal SSD storage. Most support expandable storage via M.2 NVMe SSDs (PlayStation 5) or proprietary expansion cards (Xbox Series X|S)."
+            },
+            {
+                "product_id": "generic_console",
+                "product_name": "Generic Gaming Console",
+                "category": "console",
+                "question": "Does it support backwards compatibility?",
+                "answer": "Xbox Series X|S has extensive backwards compatibility with Xbox One, 360, and original Xbox games. PlayStation 5 is backwards compatible with most PS4 games. Nintendo Switch plays Switch games only."
+            },
+            {
+                "product_id": "generic_console",
+                "product_name": "Generic Gaming Console",
+                "category": "console",
+                "question": "What online subscription is needed?",
+                "answer": "Online multiplayer requires subscriptions: PlayStation Plus, Xbox Game Pass Ultimate/Xbox Live Gold, or Nintendo Switch Online. Subscriptions also include free monthly games and cloud saves."
+            },
+            {
+                "product_id": "generic_console",
+                "product_name": "Generic Gaming Console",
+                "category": "console",
+                "question": "What controllers are included?",
+                "answer": "Consoles typically include one wireless controller. Additional controllers are sold separately. Features may include haptic feedback, adaptive triggers, motion controls, and rechargeable batteries."
+            },
+            {
+                "product_id": "generic_console",
+                "product_name": "Generic Gaming Console",
+                "category": "console",
+                "question": "What display features are supported?",
+                "answer": "Modern consoles support HDR10, Variable Refresh Rate (VRR), Auto Low Latency Mode (ALLM), and Dolby Atmos audio. Requires compatible TV or monitor to utilize these features fully."
+            },
+            
+            # Audio Q&A
+            {
+                "product_id": "generic_audio",
+                "product_name": "Generic Audio Device",
+                "category": "audio",
+                "question": "What is the sound quality?",
+                "answer": "Sound quality depends on drivers, codec support, and tuning. Look for Hi-Res Audio certification, LDAC/aptX HD support for wireless, and balanced frequency response for music enthusiasts."
+            },
+            {
+                "product_id": "generic_audio",
+                "product_name": "Generic Audio Device",
+                "category": "audio",
+                "question": "What is the battery life?",
+                "answer": "Wireless audio devices typically offer 20-40 hours for headphones, 6-8 hours for earbuds (plus case for 24-30 total), and 10-20 hours for portable speakers. Fast charging is common."
+            },
+            {
+                "product_id": "generic_audio",
+                "product_name": "Generic Audio Device",
+                "category": "audio",
+                "question": "Does it have noise cancellation?",
+                "answer": "Active Noise Cancellation (ANC) uses microphones and processing to block ambient noise. Premium models offer adaptive ANC that adjusts to your environment. Transparency mode lets ambient sound through when needed."
+            },
+            {
+                "product_id": "generic_audio",
+                "product_name": "Generic Audio Device",
+                "category": "audio",
+                "question": "What Bluetooth version and codecs?",
+                "answer": "Most audio devices use Bluetooth 5.0-5.3 for stable connection and lower latency. Codec support includes SBC (universal), AAC (Apple), aptX (Android), LDAC (high-res), and LC3 (Bluetooth LE Audio)."
+            },
+            {
+                "product_id": "generic_audio",
+                "product_name": "Generic Audio Device",
+                "category": "audio",
+                "question": "Is it comfortable for long use?",
+                "answer": "Comfort depends on weight, ear cup material, headband padding, and clamping force. Over-ear headphones distribute weight better, while in-ear buds offer portability. Try before buying for extended sessions."
+            },
+            {
+                "product_id": "generic_audio",
+                "product_name": "Generic Audio Device",
+                "category": "audio",
+                "question": "What connectivity options?",
+                "answer": "Wireless audio uses Bluetooth, with some models offering multipoint (connect 2+ devices), NFC pairing, and wired 3.5mm/USB-C as backup. Check for low-latency modes for gaming."
+            },
+            
+            # Cameras Q&A
+            {
+                "product_id": "generic_camera",
+                "product_name": "Generic Camera",
+                "category": "cameras",
+                "question": "What sensor size and resolution?",
+                "answer": "Camera sensors range from 1-inch (compact) to Full Frame (35mm). Resolution typically spans 16-50MP. Larger sensors generally provide better low-light performance and dynamic range than higher megapixel counts alone."
+            },
+            {
+                "product_id": "generic_camera",
+                "product_name": "Generic Camera",
+                "category": "cameras",
+                "question": "What video capabilities?",
+                "answer": "Modern cameras offer 4K video at 24/30/60fps, with high-end models supporting 6K/8K. Look for features like 10-bit color, Log profiles, IBIS (in-body stabilization), and external recording options."
+            },
+            {
+                "product_id": "generic_camera",
+                "product_name": "Generic Camera",
+                "category": "cameras",
+                "question": "What autofocus system?",
+                "answer": "Autofocus systems use phase-detection, contrast-detection, or hybrid. Advanced systems offer face/eye tracking, animal detection, and continuous AF. More AF points generally mean better subject tracking."
+            },
+            {
+                "product_id": "generic_camera",
+                "product_name": "Generic Camera",
+                "category": "cameras",
+                "question": "What is the ISO range?",
+                "answer": "ISO range indicates light sensitivity. Typical ranges are ISO 100-25,600 (expandable to 51,200+). Higher native ISO means better low-light performance, but image quality degrades at extreme ISOs."
+            },
+            {
+                "product_id": "generic_camera",
+                "product_name": "Generic Camera",
+                "category": "cameras",
+                "question": "What lens mount?",
+                "answer": "Lens mount determines compatible lenses. Common mounts: Canon RF/EF, Nikon Z/F, Sony E, Micro Four Thirds. Mirrorless mounts (RF, Z, E) are newer with adapters for older DSLR lenses."
+            },
+            {
+                "product_id": "generic_camera",
+                "product_name": "Generic Camera",
+                "category": "cameras",
+                "question": "Is it weather sealed?",
+                "answer": "Weather sealing protects against dust and moisture (not fully waterproof). Entry-level cameras lack sealing, mid-range have basic protection, and professional bodies offer extensive sealing for harsh conditions."
+            },
+            
+            # Displays Q&A
+            {
+                "product_id": "generic_display",
+                "product_name": "Generic Monitor",
+                "category": "displays",
+                "question": "What panel type?",
+                "answer": "Panel types include IPS (best colors/viewing angles), VA (high contrast), TN (fastest response), and OLED (infinite contrast, perfect blacks). IPS is most versatile for mixed use."
+            },
+            {
+                "product_id": "generic_display",
+                "product_name": "Generic Monitor",
+                "category": "displays",
+                "question": "What resolution and size?",
+                "answer": "Common sizes: 24\" (1080p), 27\" (1440p/4K), 32\" (4K), and ultrawide (3440x1440 or 3840x1600). Higher PPI (pixels per inch) means sharper images. Match resolution to your GPU capability."
+            },
+            {
+                "product_id": "generic_display",
+                "product_name": "Generic Monitor",
+                "category": "displays",
+                "question": "What refresh rate?",
+                "answer": "Refresh rate determines smoothness: 60Hz (standard), 144Hz (gaming), 240Hz/360Hz (competitive esports). Higher rates reduce motion blur and input lag. Requires capable GPU to utilize fully."
+            },
+            {
+                "product_id": "generic_display",
+                "product_name": "Generic Monitor",
+                "category": "displays",
+                "question": "Does it have HDR?",
+                "answer": "HDR enhances brightness and color range. Look for DisplayHDR 400/600/1000 certification (higher is better). True HDR needs 600+ nits peak brightness and local dimming. Many budget 'HDR' monitors don't meet standards."
+            },
+            {
+                "product_id": "generic_display",
+                "product_name": "Generic Monitor",
+                "category": "displays",
+                "question": "What connectivity?",
+                "answer": "Modern monitors include HDMI 2.0/2.1, DisplayPort 1.4, and sometimes USB-C with power delivery. HDMI 2.1 and DP 1.4 needed for 4K 144Hz+. USB hub and KVM features add convenience."
+            },
+            {
+                "product_id": "generic_display",
+                "product_name": "Generic Monitor",
+                "category": "displays",
+                "question": "What about adaptive sync?",
+                "answer": "Adaptive sync eliminates screen tearing: G-Sync (NVIDIA), FreeSync (AMD), or G-Sync Compatible (FreeSync certified by NVIDIA). VRR range matters—wider is better (e.g., 48-144Hz vs 60-144Hz)."
+            },
+            
+            # Wearables Q&A
+            {
+                "product_id": "generic_wearable",
+                "product_name": "Generic Smartwatch",
+                "category": "wearables",
+                "question": "What health tracking features?",
+                "answer": "Common features include heart rate monitoring, blood oxygen (SpO2), sleep tracking, stress monitoring, and ECG (premium models). Advanced watches add temperature, cycle tracking, and VO2 max estimation."
+            },
+            {
+                "product_id": "generic_wearable",
+                "product_name": "Generic Smartwatch",
+                "category": "wearables",
+                "question": "What is the battery life?",
+                "answer": "Battery life varies widely: Apple Watch (18 hours), Wear OS (1-2 days), fitness trackers (5-14 days), and basic watches (weeks). Always-on display and GPS reduce battery life significantly."
+            },
+            {
+                "product_id": "generic_wearable",
+                "product_name": "Generic Smartwatch",
+                "category": "wearables",
+                "question": "Is it waterproof?",
+                "answer": "Water resistance ratings: 3ATM (splash resistant), 5ATM (swim-safe to 50m), 10ATM (suitable for water sports). IP68 rating protects against dust and submersion to 1.5m for 30 minutes."
+            },
+            {
+                "product_id": "generic_wearable",
+                "product_name": "Generic Smartwatch",
+                "category": "wearables",
+                "question": "What smart features?",
+                "answer": "Smart features include notifications, calls, messages, music control, contactless payments, voice assistants, and app ecosystems. Compatibility depends on phone OS (iOS for Apple Watch, both for Wear OS/others)."
+            },
+            {
+                "product_id": "generic_wearable",
+                "product_name": "Generic Smartwatch",
+                "category": "wearables",
+                "question": "What fitness tracking?",
+                "answer": "Fitness tracking includes step counting, calorie burn, distance, workout detection (running, cycling, swimming, etc.), GPS route mapping, and performance metrics. Premium watches offer training plans and recovery insights."
+            },
+            {
+                "product_id": "generic_wearable",
+                "product_name": "Generic Smartwatch",
+                "category": "wearables",
+                "question": "What display type?",
+                "answer": "Display types include AMOLED (vibrant, always-on capable), LCD (lower power on light themes), and e-ink (extreme battery life, monochrome). Always-on displays drain battery faster but improve usability."
+            },
+            
+            # SmartHome Q&A
+            {
+                "product_id": "generic_smarthome",
+                "product_name": "Generic Smart Home Device",
+                "category": "smarthome",
+                "question": "What voice assistants are supported?",
+                "answer": "Most smart home devices support Amazon Alexa, Google Assistant, or Apple HomeKit/Siri. Check compatibility with your preferred ecosystem before purchasing. Some devices support multiple assistants."
+            },
+            {
+                "product_id": "generic_smarthome",
+                "product_name": "Generic Smart Home Device",
+                "category": "smarthome",
+                "question": "How is it set up?",
+                "answer": "Setup typically involves downloading a companion app, connecting to Wi-Fi, and pairing with your smart home hub or voice assistant. QR codes or NFC simplify initial setup on many modern devices."
+            },
+            {
+                "product_id": "generic_smarthome",
+                "product_name": "Generic Smart Home Device",
+                "category": "smarthome",
+                "question": "Does it need a hub?",
+                "answer": "Some devices connect directly via Wi-Fi or Bluetooth (hub-less), while others require a bridge/hub (Zigbee, Z-Wave). Hub-based systems are more reliable but add cost and complexity."
+            },
+            {
+                "product_id": "generic_smarthome",
+                "product_name": "Generic Smart Home Device",
+                "category": "smarthome",
+                "question": "What about privacy and security?",
+                "answer": "Look for devices with encryption, two-factor authentication, regular firmware updates, and reputable manufacturers. Review privacy policies, especially for cameras and voice-enabled devices."
+            },
+            {
+                "product_id": "generic_smarthome",
+                "product_name": "Generic Smart Home Device",
+                "category": "smarthome",
+                "question": "Can it be automated?",
+                "answer": "Most smart home devices support automation through routines/scenes (time-based triggers, sensor triggers, location-based). IFTTT and advanced ecosystems enable complex multi-device automations."
+            },
+            {
+                "product_id": "generic_smarthome",
+                "product_name": "Generic Smart Home Device",
+                "category": "smarthome",
+                "question": "What is Matter support?",
+                "answer": "Matter is a new universal smart home standard for cross-platform compatibility. Matter-certified devices work with Alexa, Google, Apple, and Samsung ecosystems simultaneously without brand lock-in."
+            },
+            
+            # Storage Q&A
+            {
+                "product_id": "generic_storage",
+                "product_name": "Generic External Storage",
+                "category": "storage",
+                "question": "What transfer speeds?",
+                "answer": "Transfer speeds depend on interface: USB 3.0 (5Gbps), USB 3.1 Gen 2 (10Gbps), USB 3.2 Gen 2x2 (20Gbps), Thunderbolt 3/4 (40Gbps). Portable SSDs reach 1000-2000MB/s, HDDs max at 150-200MB/s."
+            },
+            {
+                "product_id": "generic_storage",
+                "product_name": "Generic External Storage",
+                "category": "storage",
+                "question": "HDD or SSD?",
+                "answer": "HDDs offer more capacity per dollar (2-5TB common) but are slower and fragile. SSDs are 5-10x faster, durable, compact, but more expensive per GB. Choose based on priority: capacity or speed."
+            },
+            {
+                "product_id": "generic_storage",
+                "product_name": "Generic External Storage",
+                "category": "storage",
+                "question": "Is it portable or desktop?",
+                "answer": "Portable drives are bus-powered (no external power), compact (2.5\" or smaller), and designed for travel. Desktop drives are larger (3.5\"), need AC power, and offer more capacity but less portability."
+            },
+            {
+                "product_id": "generic_storage",
+                "product_name": "Generic External Storage",
+                "category": "storage",
+                "question": "What durability features?",
+                "answer": "Look for shock resistance, dust/water resistance (IP ratings), ruggedized enclosures, and encryption support for sensitive data. SSDs are naturally more durable than HDDs with moving parts."
+            },
+            {
+                "product_id": "generic_storage",
+                "product_name": "Generic External Storage",
+                "category": "storage",
+                "question": "Does it work with my device?",
+                "answer": "Most drives work with Windows, macOS, and Linux. Format matters: exFAT (universal), NTFS (Windows), APFS (Mac). USB-C models work with modern laptops, tablets, and phones supporting external storage."
+            },
+            {
+                "product_id": "generic_storage",
+                "product_name": "Generic External Storage",
+                "category": "storage",
+                "question": "What is the warranty?",
+                "answer": "Warranties range from 1-5 years. Longer warranties indicate manufacturer confidence. External SSDs typically have 3-5 year warranties, while HDDs offer 2-3 years. Check TBW ratings for SSDs."
+            },
+            
+            # Networking Q&A
+            {
+                "product_id": "generic_networking",
+                "product_name": "Generic Router",
+                "category": "networking",
+                "question": "What Wi-Fi standard?",
+                "answer": "Wi-Fi standards: Wi-Fi 5 (802.11ac, up to 1.3Gbps), Wi-Fi 6 (802.11ax, up to 9.6Gbps), Wi-Fi 6E (6GHz band), Wi-Fi 7 (802.11be, latest). Newer standards offer better speed, capacity, and efficiency."
+            },
+            {
+                "product_id": "generic_networking",
+                "product_name": "Generic Router",
+                "category": "networking",
+                "question": "What coverage area?",
+                "answer": "Coverage depends on router antennas, power, and home layout. Basic routers cover 1000-1500 sq ft, mid-range 1500-2500 sq ft, high-end 2500-3500 sq ft. Mesh systems extend coverage to larger homes."
+            },
+            {
+                "product_id": "generic_networking",
+                "product_name": "Generic Router",
+                "category": "networking",
+                "question": "How many devices supported?",
+                "answer": "Entry routers handle 10-20 devices, mid-range 20-40 devices, and high-end/mesh systems 50-100+ devices. Wi-Fi 6/6E improves efficiency with many concurrent connections via OFDMA and MU-MIMO."
+            },
+            {
+                "product_id": "generic_networking",
+                "product_name": "Generic Router",
+                "category": "networking",
+                "question": "What security features?",
+                "answer": "Look for WPA3 encryption (latest standard), automatic firmware updates, guest networks, parental controls, VPN support, and firewall. Advanced routers offer intrusion prevention and malware protection."
+            },
+            {
+                "product_id": "generic_networking",
+                "product_name": "Generic Router",
+                "category": "networking",
+                "question": "Single router or mesh system?",
+                "answer": "Single routers work for small/medium homes with central placement. Mesh systems use multiple nodes for seamless coverage in large/multi-story homes, eliminating dead zones. Mesh costs more but provides better coverage."
+            },
+            {
+                "product_id": "generic_networking",
+                "product_name": "Generic Router",
+                "category": "networking",
+                "question": "What ports and features?",
+                "answer": "Check for Gigabit Ethernet ports (WAN/LAN), USB ports (file sharing, printer), QoS (prioritize traffic), beamforming (focus signal), and app-based management. Gaming routers add low-latency modes."
+            },
+            
+            # Accessories Q&A
+            {
+                "product_id": "generic_accessories",
+                "product_name": "Generic Accessory",
+                "category": "accessories",
+                "question": "Is it compatible with my device?",
+                "answer": "Check compatibility with your device's OS (Windows, macOS, Linux, iOS, Android), connection type (USB-A, USB-C, Bluetooth, wireless), and any software requirements. Read product specifications carefully."
+            },
+            {
+                "product_id": "generic_accessories",
+                "product_name": "Generic Accessory",
+                "category": "accessories",
+                "question": "What is the build quality?",
+                "answer": "Build quality varies by price tier. Look for durable materials (aluminum, reinforced plastic), cable strain relief, button longevity ratings, and manufacturer reputation. Premium accessories last longer and feel better."
+            },
+            {
+                "product_id": "generic_accessories",
+                "product_name": "Generic Accessory",
+                "category": "accessories",
+                "question": "Does it need drivers or software?",
+                "answer": "Many accessories are plug-and-play with basic functionality. Advanced features (RGB control, macros, custom profiles) often require companion software. Check if software is required or optional."
+            },
+            {
+                "product_id": "generic_accessories",
+                "product_name": "Generic Accessory",
+                "category": "accessories",
+                "question": "Is it wireless or wired?",
+                "answer": "Wired accessories offer zero latency and no battery concerns. Wireless (Bluetooth, 2.4GHz) provides freedom of movement but needs charging/batteries. Gaming peripherals often prefer wired or 2.4GHz for low latency."
+            },
+            {
+                "product_id": "generic_accessories",
+                "product_name": "Generic Accessory",
+                "category": "accessories",
+                "question": "What is the warranty?",
+                "answer": "Warranty periods range from 1-5 years depending on brand and product type. Premium brands offer better warranties and support. Register products to activate extended warranties when available."
+            },
+            {
+                "product_id": "generic_accessories",
+                "product_name": "Generic Accessory",
+                "category": "accessories",
+                "question": "Is it ergonomic?",
+                "answer": "Ergonomics matter for frequently-used accessories. Look for adjustable features, comfortable materials, weight distribution, and user reviews mentioning comfort. Try before buying when possible for mice, keyboards, and headsets."
+            },
+            
+            # PSU Q&A
+            {
+                "product_id": "generic_psu",
+                "product_name": "Generic Power Supply",
+                "category": "psu",
+                "question": "What wattage do I need?",
+                "answer": "Calculate total system power draw and add 20-30% headroom. Typical builds: 450-550W (office), 650-750W (gaming), 850-1000W+ (high-end gaming/workstation). PSU efficiency peaks at 50-80% load."
+            },
+            {
+                "product_id": "generic_psu",
+                "product_name": "Generic Power Supply",
+                "category": "psu",
+                "question": "What efficiency rating?",
+                "answer": "80 Plus ratings indicate efficiency: Bronze (82-85%), Silver (85-88%), Gold (87-90%), Platinum (89-92%), Titanium (90-94%). Higher efficiency means less heat, lower power bills, and better components."
+            },
+            {
+                "product_id": "generic_psu",
+                "product_name": "Generic Power Supply",
+                "category": "psu",
+                "question": "Modular or non-modular?",
+                "answer": "Non-modular PSUs have fixed cables (cheaper, more clutter). Semi-modular keeps essential cables attached. Fully modular lets you attach only needed cables (cleaner builds, better airflow, easier cable management)."
+            },
+            {
+                "product_id": "generic_psu",
+                "product_name": "Generic Power Supply",
+                "category": "psu",
+                "question": "Does it support ATX 3.0?",
+                "answer": "ATX 3.0/PCIe 5.0 PSUs include 12VHPWR connector for RTX 40-series GPUs and handle transient power spikes better. Not required but future-proofs your build for next-gen components."
+            },
+            {
+                "product_id": "generic_psu",
+                "product_name": "Generic Power Supply",
+                "category": "psu",
+                "question": "What protections does it have?",
+                "answer": "Quality PSUs include OVP (over-voltage), UVP (under-voltage), OCP (over-current), OPP (over-power), SCP (short-circuit), and OTP (over-temperature) protections to safeguard components."
+            },
+            {
+                "product_id": "generic_psu",
+                "product_name": "Generic Power Supply",
+                "category": "psu",
+                "question": "What is the warranty?",
+                "answer": "PSU warranties range from 3-12 years. Longer warranties indicate quality and manufacturer confidence. 5+ year warranties common on Gold-rated and higher. Never cheap out on PSUs—they protect all other components."
+            },
+            
+            # Motherboard Q&A
+            {
+                "product_id": "generic_motherboard",
+                "product_name": "Generic Motherboard",
+                "category": "motherboard",
+                "question": "What socket and chipset?",
+                "answer": "Socket must match your CPU (Intel LGA1700 for 12th/13th gen, AMD AM5 for Ryzen 7000). Chipset determines features: Intel Z790/B760, AMD X670/B650. Higher-tier chipsets offer more I/O and overclocking."
+            },
+            {
+                "product_id": "generic_motherboard",
+                "product_name": "Generic Motherboard",
+                "category": "motherboard",
+                "question": "What form factor?",
+                "answer": "Form factors: ATX (standard, most features), Micro-ATX (compact, fewer slots), Mini-ITX (smallest, limited expansion). Match case compatibility. ATX offers most flexibility for future upgrades."
+            },
+            {
+                "product_id": "generic_motherboard",
+                "product_name": "Generic Motherboard",
+                "category": "motherboard",
+                "question": "How many RAM slots and max capacity?",
+                "answer": "Most motherboards have 2 or 4 RAM slots. Dual-channel boards support 32-64GB, high-end boards support 128-192GB. Check max speed support (DDR4-3200, DDR5-6000+) and XMP/EXPO profiles for overclocking."
+            },
+            {
+                "product_id": "generic_motherboard",
+                "product_name": "Generic Motherboard",
+                "category": "motherboard",
+                "question": "What expansion slots?",
+                "answer": "PCIe slots for GPUs (x16), SSDs (x4 M.2), and expansion cards. Modern boards offer PCIe 4.0/5.0. Check M.2 slot count (2-5 slots common), SATA ports for legacy drives, and PCIe lane allocation."
+            },
+            {
+                "product_id": "generic_motherboard",
+                "product_name": "Generic Motherboard",
+                "category": "motherboard",
+                "question": "What connectivity?",
+                "answer": "Look for USB 3.2 Gen 2 (10Gbps), USB-C, USB4/Thunderbolt, Wi-Fi 6/6E, 2.5G/10G Ethernet, Bluetooth 5.2+. Audio quality varies (basic Realtek to premium ESS Sabre DACs). More rear I/O ports = better convenience."
+            },
+            {
+                "product_id": "generic_motherboard",
+                "product_name": "Generic Motherboard",
+                "category": "motherboard",
+                "question": "Does it support overclocking?",
+                "answer": "Overclocking requires unlocked CPUs (Intel K-series, AMD non-X) and compatible chipsets (Intel Z-series, AMD X/B-series). Look for robust VRMs (voltage regulation modules), heatsinks, and BIOS overclocking features."
+            },
+            
+            # AirCooler/Liquid Cooler Q&A
+            {
+                "product_id": "generic_aircooler",
+                "product_name": "Generic CPU Cooler",
+                "category": "aircooler",
+                "question": "Air or liquid cooling?",
+                "answer": "Air coolers are reliable, quieter, maintenance-free, and cheaper. Liquid coolers (AIO) offer better cooling for high-end CPUs, cleaner aesthetics, and flexible radiator placement but cost more and have pump noise/failure risk."
+            },
+            {
+                "product_id": "generic_aircooler",
+                "product_name": "Generic CPU Cooler",
+                "category": "aircooler",
+                "question": "What CPU TDP is supported?",
+                "answer": "Match cooler TDP rating to CPU: 65W CPUs need basic coolers, 125W needs tower coolers, 150W+ needs high-end air or 240mm+ AIO. Add headroom for overclocking. Check manufacturer compatibility lists."
+            },
+            {
+                "product_id": "generic_aircooler",
+                "product_name": "Generic CPU Cooler",
+                "category": "aircooler",
+                "question": "What socket compatibility?",
+                "answer": "Check CPU socket compatibility: Intel LGA1700/1200, AMD AM4/AM5. Most coolers include mounting kits for multiple sockets. Some require separate brackets for newest sockets—verify before purchasing."
+            },
+            {
+                "product_id": "generic_aircooler",
+                "product_name": "Generic CPU Cooler",
+                "category": "aircooler",
+                "question": "What are the dimensions?",
+                "answer": "Measure case clearance: tower air cooler height (120-165mm), AIO radiator placement (120/240/280/360mm). Check RAM clearance for tall air coolers. Radiators need case mounting points (top/front panels)."
+            },
+            {
+                "product_id": "generic_aircooler",
+                "product_name": "Generic CPU Cooler",
+                "category": "aircooler",
+                "question": "How noisy is it?",
+                "answer": "Noise levels measured in dBA: 20-30 dBA (quiet), 30-40 dBA (moderate), 40+ dBA (loud). Larger/slower fans are quieter. PWM fans adjust speed based on temperature. Check reviews for noise testing under load."
+            },
+            {
+                "product_id": "generic_aircooler",
+                "product_name": "Generic CPU Cooler",
+                "category": "aircooler",
+                "question": "Does it have RGB?",
+                "answer": "Many coolers include RGB lighting (fans, pump block, or both) controlled via motherboard RGB headers or proprietary software. RGB adds aesthetics but doesn't affect cooling performance. Non-RGB versions are cheaper."
+            },
+            
+            # Case Q&A
+            {
+                "product_id": "generic_case",
+                "product_name": "Generic PC Case",
+                "category": "case",
+                "question": "What form factor?",
+                "answer": "Case form factors: Full Tower (E-ATX support, most space), Mid Tower (ATX, most popular), Micro-ATX (compact), Mini-ITX (smallest). Match motherboard size. Bigger cases offer easier building and better airflow."
+            },
+            {
+                "product_id": "generic_case",
+                "product_name": "Generic PC Case",
+                "category": "case",
+                "question": "What is the airflow design?",
+                "answer": "Good airflow needs intake (front/bottom) and exhaust (rear/top) fans. Mesh fronts outperform solid/tempered glass panels. Positive pressure (more intake) reduces dust. Check fan mounting: 120mm, 140mm, radiator support."
+            },
+            {
+                "product_id": "generic_case",
+                "product_name": "Generic PC Case",
+                "category": "case",
+                "question": "What GPU and CPU cooler clearance?",
+                "answer": "Check maximum GPU length (280-380mm typical), CPU cooler height (150-170mm), and PSU length (140-200mm). Verify dimensions match your components. Some cases have removable drive cages for extra GPU clearance."
+            },
+            {
+                "product_id": "generic_case",
+                "product_name": "Generic PC Case",
+                "category": "case",
+                "question": "How is cable management?",
+                "answer": "Good cable management includes: velcro straps/ties, cable routing holes with grommets, PSU shroud to hide cables, 15-25mm clearance behind motherboard tray. Clean builds improve airflow and aesthetics."
+            },
+            {
+                "product_id": "generic_case",
+                "product_name": "Generic PC Case",
+                "category": "case",
+                "question": "What front panel ports?",
+                "answer": "Front I/O typically includes USB 3.0/3.1 Type-A, USB-C, audio jacks, and power/reset buttons. Modern cases add USB-C (3.2 Gen 2 or USB4). More ports = better convenience. Check motherboard header compatibility."
+            },
+            {
+                "product_id": "generic_case",
+                "product_name": "Generic PC Case",
+                "category": "case",
+                "question": "Does it have tempered glass?",
+                "answer": "Tempered glass side panels showcase components and RGB lighting but weigh more and restrict airflow vs mesh. Tinted glass reduces glare. Some cases offer dual tempered glass (both sides) for maximum visibility."
+            },
+            
+            # Tablet Q&A
+            {
+                "product_id": "generic_tablet",
+                "product_name": "Generic Tablet",
+                "category": "tablet",
+                "question": "What is the display size and resolution?",
+                "answer": "Tablets range from 8\" (portable) to 12-13\" (productivity). Resolutions: HD (1280x800), Full HD (1920x1200), 2K (2560x1600), or higher. Higher PPI means sharper text and images. LCD or OLED affects color and contrast."
+            },
+            {
+                "product_id": "generic_tablet",
+                "product_name": "Generic Tablet",
+                "category": "tablet",
+                "question": "What processor and performance?",
+                "answer": "Processors: Apple A-series/M-series (iPad), Qualcomm Snapdragon (Android), or Intel (Windows tablets). Performance tiers: entry (web/media), mid-range (multitasking), high-end (productivity/creative work). RAM ranges 2-16GB."
+            },
+            {
+                "product_id": "generic_tablet",
+                "product_name": "Generic Tablet",
+                "category": "tablet",
+                "question": "Does it support a stylus?",
+                "answer": "Premium tablets support styluses: Apple Pencil (iPad), S Pen (Samsung), Surface Pen (Microsoft). Stylus features: pressure sensitivity (4096-8192 levels), tilt detection, palm rejection. Essential for artists and note-takers."
+            },
+            {
+                "product_id": "generic_tablet",
+                "product_name": "Generic Tablet",
+                "category": "tablet",
+                "question": "What is the battery life?",
+                "answer": "Tablet battery life: 8-10 hours (typical use), up to 15-20 hours (video playback). iPad leads in efficiency. Battery capacity ranges 5000-10000mAh. Fast charging support varies by model."
+            },
+            {
+                "product_id": "generic_tablet",
+                "product_name": "Generic Tablet",
+                "category": "tablet",
+                "question": "Can it replace a laptop?",
+                "answer": "High-end tablets with keyboard attachments can replace laptops for productivity: iPad Pro with Magic Keyboard, Surface Pro with Type Cover. Consider OS limitations (iPadOS vs macOS, Android vs Windows) for specific software needs."
+            },
+            {
+                "product_id": "generic_tablet",
+                "product_name": "Generic Tablet",
+                "category": "tablet",
+                "question": "What connectivity options?",
+                "answer": "Most tablets have Wi-Fi 5/6, Bluetooth 5.0+. Premium models offer cellular (LTE/5G) for on-the-go connectivity. Ports vary: USB-C (modern), Lightning (iPad), headphone jack (increasingly rare). Some support external displays."
+            }
+        ]
+        
+        # Save to file
+        with open(self.knowledge_file, 'w') as f:
+            json.dump(default_qna, f, indent=2)
+        
+        self.qna_pairs = default_qna
+        self.documents = [f"{qna['question']} {qna['answer']}" for qna in default_qna]
+        
+        logging.info(f"Created default product Q&A knowledge base with {len(default_qna)} Q&A pairs")
+    
+    def load_knowledge_base(self):
+        """Load knowledge base from JSON file"""
+        try:
+            with open(self.knowledge_file, 'r') as f:
+                self.qna_pairs = json.load(f)
+            
+            self.documents = [f"{qna['question']} {qna['answer']}" for qna in self.qna_pairs]
+            
+            logging.info(f"Loaded product Q&A knowledge base with {len(self.qna_pairs)} Q&A pairs")
+        except Exception as e:
+            logging.error(f"Error loading knowledge base: {e}")
+            self.create_default_knowledge_base()
+    
+    def create_vector_index(self):
+        """Create TF-IDF vectors and FAISS index for similarity search"""
+        if not self.documents:
+            logging.error("No documents to index")
+            return
+        
+        try:
+            # Create TF-IDF vectors
+            self.vectorizer = TfidfVectorizer(
+                max_features=500,
+                stop_words='english',
+                lowercase=True,
+                ngram_range=(1, 3)  # Include up to trigrams for technical terms
+            )
+            
+            self.document_vectors = self.vectorizer.fit_transform(self.documents).toarray()
+            
+            # Try to create FAISS index if available
+            if self.use_faiss and FAISS_AVAILABLE:
+                try:
+                    dimension = self.document_vectors.shape[1]
+                    self.faiss_index = faiss.IndexFlatIP(dimension)
+                    
+                    # Normalize vectors for cosine similarity
+                    vectors_float32 = self.document_vectors.astype(np.float32)
+                    vectors_normalized = vectors_float32.copy()
+                    faiss.normalize_L2(vectors_normalized)
+                    
+                    self.faiss_index.add(vectors_normalized)
+                    
+                    # Save index and vectorizer
+                    faiss.write_index(self.faiss_index, self.index_file)
+                    with open(self.vectorizer_file, 'wb') as f:
+                        pickle.dump(self.vectorizer, f)
+                    
+                    logging.info(f"Created FAISS vector index with {len(self.documents)} Q&A pairs")
+                    
+                except Exception as faiss_error:
+                    logging.error(f"FAISS initialization failed: {faiss_error}")
+                    self.use_faiss = False
+                    self.faiss_index = None
+                    
+                    # Save vectorizer for sklearn fallback
+                    with open(self.vectorizer_file, 'wb') as f:
+                        pickle.dump(self.vectorizer, f)
+            else:
+                # Save vectorizer for sklearn fallback
+                with open(self.vectorizer_file, 'wb') as f:
+                    pickle.dump(self.vectorizer, f)
+                logging.info(f"Created TF-IDF vectors with {len(self.documents)} Q&A pairs")
+                
+        except Exception as e:
+            logging.error(f"Error creating vector index: {e}")
+    
+    def load_vector_index(self):
+        """Load existing vector index and vectorizer"""
+        try:
+            # Try to load FAISS index first
+            if self.use_faiss and FAISS_AVAILABLE and os.path.exists(self.index_file):
+                try:
+                    self.faiss_index = faiss.read_index(self.index_file)
+                    with open(self.vectorizer_file, 'rb') as f:
+                        self.vectorizer = pickle.load(f)
+                    
+                    # Recreate document vectors if needed
+                    if self.documents and self.vectorizer:
+                        self.document_vectors = self.vectorizer.transform(self.documents).toarray()
+                    
+                    logging.info("Loaded existing FAISS vector index")
+                    return
+                    
+                except Exception as faiss_error:
+                    logging.error(f"Error loading FAISS index: {faiss_error}")
+                    self.use_faiss = False
+                    self.faiss_index = None
+            
+            # Load vectorizer for sklearn fallback
+            if os.path.exists(self.vectorizer_file):
+                with open(self.vectorizer_file, 'rb') as f:
+                    self.vectorizer = pickle.load(f)
+                
+                # Recreate document vectors
+                if self.documents and self.vectorizer:
+                    self.document_vectors = self.vectorizer.transform(self.documents).toarray()
+                
+                logging.info("Loaded existing vectorizer")
+            else:
+                self.create_vector_index()
+                
+        except Exception as e:
+            logging.error(f"Error loading vector index: {e}")
+            self.create_vector_index()
+    
+    def get_questions_for_product(self, product_name: str, category: str, limit: int = 6) -> List[Dict]:
+        """
+        Get relevant questions for a product based on its name and category
+        
+        Args:
+            product_name: Name of the product
+            category: Product category
+            limit: Number of questions to return
+        
+        Returns:
+            List of question dictionaries
+        """
+        try:
+            questions = []
+            seen_questions = set()
+            
+            # Normalize product name for better matching
+            product_name_lower = product_name.lower()
+            
+            # First pass: Look for exact or strong product name matches
+            # Only match if significant keywords from product name appear in QnA product name
+            for qna in self.qna_pairs:
+                qna_name_lower = qna['product_name'].lower()
+                
+                # Check for strong match - multiple keywords or exact substring match
+                # Extract meaningful words (ignore common words)
+                product_keywords = [w for w in product_name_lower.split() if len(w) > 2 and w not in ['the', 'for', 'and', 'with']]
+                qna_keywords = [w for w in qna_name_lower.split() if len(w) > 2 and w not in ['the', 'for', 'and', 'with']]
+                
+                # Count matching keywords
+                matching_keywords = sum(1 for kw in product_keywords if kw in qna_name_lower)
+                
+                # Strong match: at least 2 keywords match, or it's a substring match
+                is_strong_match = (
+                    matching_keywords >= 2 or  # e.g., "Dell XPS" matches "Dell XPS 15"
+                    (len(product_keywords) == 1 and product_keywords[0] in qna_name_lower and len(product_keywords[0]) > 4) or  # Single unique keyword like "macbook"
+                    product_name_lower in qna_name_lower or
+                    qna_name_lower in product_name_lower
+                )
+                
+                if is_strong_match and 'generic' not in qna['product_id'].lower():
+                    if qna['question'] not in seen_questions:
+                        questions.append({
+                            'id': len(questions) + 1,
+                            'question': qna['question'],
+                            'answer': qna['answer']
+                        })
+                        seen_questions.add(qna['question'])
+                        if len(questions) >= limit:
+                            return questions
+            
+            # If we found specific product matches (at least 3), return them
+            if len(questions) >= 3:
+                return questions[:limit]
+            
+            # Second pass: Only if no specific match found, use generic category questions
+            # Clear previous results since we didn't find a good match
+            questions = []
+            seen_questions = set()
+            
+            category_lower = category.lower()
+            for qna in self.qna_pairs:
+                if qna['question'] not in seen_questions:
+                    if (category_lower in qna['category'].lower() or qna['category'].lower() in category_lower):
+                        # Only use generic entries
+                        if 'generic' in qna['product_id'].lower():
+                            questions.append({
+                                'id': len(questions) + 1,
+                                'question': qna['question'],
+                                'answer': qna['answer']
+                            })
+                            seen_questions.add(qna['question'])
+                            if len(questions) >= limit:
+                                break
+            
+            return questions[:limit] if questions else self._get_fallback_questions(category, limit)
+            
+        except Exception as e:
+            logging.error(f"Error getting questions for product: {e}")
+            return self._get_fallback_questions(category, limit)
+    
+    def _get_fallback_questions(self, category: str, limit: int = 6) -> List[Dict]:
+        """Get fallback questions when search fails"""
+        category_lower = category.lower()
+        
+        # Filter by category
+        category_qna = [
+            qna for qna in self.qna_pairs 
+            if category_lower in qna['category'].lower() or qna['category'].lower() in category_lower
+        ]
+        
+        # If no category match, use generic
+        if not category_qna:
+            category_qna = [qna for qna in self.qna_pairs if qna['product_id'].startswith('generic')][:limit]
+        
+        # Format as question list
+        questions = []
+        for idx, qna in enumerate(category_qna[:limit]):
+            questions.append({
+                'id': idx + 1,
+                'question': qna['question'],
+                'answer': qna['answer']
+            })
+        
+        return questions
+    
+    def search(self, query: str, top_k: int = 6, min_score: float = 0.05) -> List[Dict]:
+        """
+        Search for relevant Q&A pairs using vector similarity
+        
+        Args:
+            query: Search query string
+            top_k: Number of top results to return
+            min_score: Minimum similarity score threshold
+        
+        Returns:
+            List of relevant Q&A pairs with scores
+        """
+        if not self.vectorizer:
+            logging.error("Vector index not initialized")
+            return []
+
+        try:
+            # Vectorize query
+            query_vector = self.vectorizer.transform([query]).toarray()
+            
+            if self.use_faiss and self.faiss_index is not None:
+                # Use FAISS for search
+                query_normalized = query_vector.astype(np.float32)
+                faiss.normalize_L2(query_normalized)
+                
+                scores, indices = self.faiss_index.search(query_normalized, top_k)
+                
+                results = []
+                for score, idx in zip(scores[0], indices[0]):
+                    if score >= min_score and idx < len(self.qna_pairs):
+                        result = self.qna_pairs[idx].copy()
+                        result['relevance_score'] = float(score)
+                        results.append(result)
+                        
+            else:
+                # Use sklearn cosine similarity fallback
+                if self.document_vectors is None:
+                    self.document_vectors = self.vectorizer.transform(self.documents).toarray()
+                
+                # Calculate cosine similarity
+                similarities = cosine_similarity(query_vector, self.document_vectors)[0]
+                
+                # Get top_k indices
+                top_indices = np.argsort(similarities)[::-1][:top_k]
+                
+                results = []
+                for idx in top_indices:
+                    score = similarities[idx]
+                    if score >= min_score and idx < len(self.qna_pairs):
+                        result = self.qna_pairs[idx].copy()
+                        result['relevance_score'] = float(score)
+                        results.append(result)
+            
+            return results
+            
+        except Exception as e:
+            logging.error(f"Error during search: {e}")
+            return []
+    
+    def add_qna_pair(self, product_id: str, product_name: str, category: str, 
+                     question: str, answer: str) -> bool:
+        """Add a new Q&A pair to the knowledge base"""
+        try:
+            new_qna = {
+                "product_id": product_id,
+                "product_name": product_name,
+                "category": category,
+                "question": question,
+                "answer": answer,
+                "created_at": datetime.now().isoformat()
+            }
+            
+            self.qna_pairs.append(new_qna)
+            self.documents.append(f"{question} {answer}")
+            
+            # Save to file
+            with open(self.knowledge_file, 'w') as f:
+                json.dump(self.qna_pairs, f, indent=2)
+            
+            # Rebuild index
+            self.create_vector_index()
+            
+            logging.info(f"Added new Q&A pair for product {product_id}")
+            return True
+            
+        except Exception as e:
+            logging.error(f"Error adding Q&A pair: {e}")
+            return False
+
+
+# Singleton instance
+_product_qna_rag = None
+
+def get_product_qna_rag() -> ProductQnARAG:
+    """Get or create singleton ProductQnARAG instance"""
+    global _product_qna_rag
+    if _product_qna_rag is None:
+        _product_qna_rag = ProductQnARAG()
+    return _product_qna_rag

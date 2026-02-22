@@ -1,0 +1,543 @@
+{
+  "navbar": {
+    "home": "首页",
+    "products": "产品",
+    "trackOrder": "订单跟踪",
+    "contact": "联系我们",
+    "about": "关于我们",
+    "cart": "购物车",
+    "adminDashboard": "管理员面板",
+    "customerSupport": "客户支持"
+  },
+  "auth": {
+    "signIn": "登录",
+    "signUp": "注册",
+    "logout": "退出登录"
+  },
+"cart": {
+  "addToCart": "加入购物车",
+  "removeFromCart": "从购物车移除",
+  "item": "商品",
+  "items": "商品",
+  "quantity": "数量",
+  "increase": "增加",
+  "decrease": "减少",
+  "checkout": "前往结账",
+  "emptyCart": "您的购物车是空的。",
+  "title": "购物车",
+  "price": "价格",
+  "inStock": "有货",
+  "delete": "删除",
+  "subtotal": "小计",
+  "shopDeals": "查看今日优惠",
+  "cartCleared": "购物车已清空",
+  "itemRemoved": "商品已从购物车移除",
+  "quantityIncreased": "数量已增加",
+  "quantityDecreased": "数量已减少",
+  "cartEmptyError": "您的购物车是空的！"
+},
+  "order": {
+    "trackYourOrder": "跟踪您的订单",
+    "orderNow": "立即下单",
+    "orderId": "订单编号",
+    "status": "状态",
+    "pending": "待处理",
+    "shipped": "已发货",
+    "delivered": "已送达"
+  },
+      "orderSummary": {
+      "loading": "正在加载您的订单详情...",
+      "noOrder": "未找到订单。",
+      "loadError": "无法加载订单详情。",
+      "trackingCopied": "追踪号码已复制！",
+      "thankYou": "感谢您的订单！",
+      "confirmationSent": "我们已通过电子邮件发送订单详情。",
+      "orderSummary": "订单摘要",
+      "orderDetails": "订单详情",
+      "status": "订单状态",
+      "orderNumber": "订单号",
+      "trackingNumber": "追踪号码",
+      "copy": "复制",
+      "estDelivery": "预计送达时间",
+      "deliveryTime": "3-5 个工作日",
+      "paymentSummary": "付款摘要",
+      "totalAmount": "总金额",
+      "orderItems": "订单商品",
+      "quantity": "数量",
+      "continueShopping": "继续购物",
+      "trackOrder": "追踪您的订单"
+    },
+
+    "trackOrder": {
+    "title": "追踪您的订单",
+    "subtitle": "请输入您的追踪号码以查看订单状态",
+    "placeholder": "请输入您的追踪号码（例如：TH-12345678）",
+    "button": "追踪订单",
+    "tracking": "正在追踪...",
+    "success": "找到订单！",
+    "order": "订单",
+    "errors": {
+      "noTracking": "请输入追踪号码！",
+      "notFound": "未找到订单或追踪号码无效。"
+    },
+    "steps": {
+      "placed": "订单已下达",
+      "confirmed": "已确认",
+      "shipped": "已发货",
+      "delivered": "已送达"
+    },
+    "trackingNumber": "追踪号码",
+    "deliveredOn": "送达日期",
+    "cancelledOn": "取消日期",
+    "estimatedDelivery": "预计送达",
+    "expectedDelivery": "预期送达",
+    "defaultDelivery": "3-5 个工作日",
+    "delayedDateNote": "已延迟 - 新日期将尽快更新",
+    "delayedMessage": "您的订单已延迟，我们正在努力尽快为您送达。",
+    "cancelledMessage": "您的订单已被取消。如有疑问，请联系客服。",
+    "delayedApology": "您的订单已延迟，给您带来不便我们深感抱歉。",
+    "cancelledNote": "此订单已被取消。"
+  },
+
+    "product": {
+    "price": "价格",
+    "inStock": "有货",
+    "unavailable": "目前不可用",
+    "category": "类别",
+    "addToCart": "加入购物车",
+    "outOfStock": "缺货"
+  },
+
+  "toasts": {
+    "addedToCart": "商品已成功加入购物车！",
+    "removedFromCart": "商品已从购物车中移除。",
+    "error": "出现错误。请重试。"
+  },
+  "footer": {
+    "logo": "🛒 TechHive 巴基斯坦",
+    "description": "您在巴基斯坦值得信赖的电子产品合作伙伴。自2018年以来，快速配送、安全支付和以客户为先的服务。",
+    "quickLinks": "快速链接",
+    "home": "首页",
+    "products": "产品",
+    "aboutUs": "关于我们",
+    "support": "支持",
+    "faq": "常见问题",
+    "returnsPolicy": "退货政策",
+    "helpCenter": "帮助中心",
+    "contactUs": "联系我们",
+    "phone": "+92 51 1234567",
+    "email": "support@techhivepk.com",
+    "address": "商业市场，拉瓦尔品第，巴基斯坦",
+    "copyright": "© {{year}} TechHive 巴基斯坦。保留所有权利。",
+    "privacyPolicy": "隐私政策",
+    "termsOfService": "服务条款"
+  },
+  "shipping": {
+    "title": "添加送货信息",
+    "fullName": "全名",
+    "address": "地址",
+    "city": "城市",
+    "postalCode": "邮政编码",
+    "country": "国家",
+    "button": "保存送货信息",
+    "saving": "正在保存...",
+    "successMessage": "送货信息已保存！1秒后跳转至订单页面...",
+    "selectShippingAddress": "选择送货地址",
+    "selectedShippingAddress": "已选择的送货地址",
+    "selectedAddress": "已选择",
+    "placeholder": {
+      "fullName": "输入您的全名",
+      "address": "输入您的地址",
+      "city": "输入您的城市",
+      "postalCode": "输入邮政编码",
+      "country": "输入您的国家"
+    }
+  },
+  "forgotPassword": {
+    "title": "忘记密码？",
+    "emailPlaceholder": "输入您的邮箱",
+    "button": "发送重置链接",
+    "success": "重置链接已发送至 {{email}}",
+    "error": "错误：{{message}}"
+  },
+  "signIn": {
+    "title": "登录 TechHive",
+    "emailPlaceholder": "邮箱",
+    "passwordPlaceholder": "密码",
+    "button": "登录",
+    "google": "用谷歌登录",
+    "or": "或",
+    "forgotPassword": "忘记密码？",
+    "newUser": "新用户？",
+    "linkToSignUp": "注册",
+    "errors": {
+      "invalid": "邮箱或密码错误",
+      "unsuccessful": "登录失败"
+    },
+    "success": "欢迎回来，{{name}}！"
+  },
+  "signUp": {
+    "title": "创建账户",
+    "namePlaceholder": "全名",
+    "emailPlaceholder": "邮箱",
+    "passwordPlaceholder": "密码（至少6个字符）",
+    "button": "注册",
+    "google": "用谷歌注册",
+    "or": "或",
+    "errors": {
+      "required": "请填写所有字段。",
+      "shortPassword": "密码长度不能少于6个字符。",
+      "emailUsed": "邮箱已被使用。",
+      "failed": "注册失败：{{message}}"
+    },
+    "success": "账户创建成功！欢迎 🎉",
+    "googleSuccess": "成功使用谷歌注册！",
+    "googleFailed": "谷歌注册失败：{{message}}"
+  },
+  "signOut": {
+    "success": "成功退出登录",
+    "error": "退出失败：{{message}}"
+  },
+  "about": {
+    "title": "关于 TechHive 巴基斯坦",
+    "subtitle": "您在拉瓦尔品第值得信赖的电子产品合作伙伴，自2024年以来连接技术与巴基斯坦家庭",
+    "ourStory": {
+      "title": "我们的故事",
+      "paragraph1": "2024年成立于巴基斯坦拉瓦尔品第的心脏地带，TechHive 巴基斯坦始于一个梦想，即弥合尖端技术与日常巴基斯坦消费者之间的差距。从商业市场的一家小电子商店开始，现已发展成为巴基斯坦最受信任的在线电子产品零售商之一。",
+      "paragraph2": "我们的旅程始于我们的创始人，来自伊斯兰堡伊克拉大学的一名软件工程师，他注意到巴基斯坦消费者在尝试以公平价格获得正品、高质量电子产品时面临的挑战。实体店的长队、有限的产品可用性、对真实性的担忧以及缺乏适当的售后支持都是常见的挫折。",
+      "paragraph3": "我们认识到巴基斯坦不断发展的数字环境需要一个可靠的电子产品合作伙伴——一个理解本地需求、提供正品、在乌尔都语和英语中提供卓越客户服务，并在全国范围内精心精确地交付的合作伙伴。",
+      "paragraph4": "今天，从我们在拉瓦尔品第的总部和遍布旁遮普的履行中心，我们为从卡拉奇到吉尔吉特、从拉合尔到奎达的客户提供服务。我们已成功交付超过50,000个订单，并建立了一个信任我们技术需求的满意客户社区。"
+    },
+    "coreValues": {
+      "title": "我们的核心价值观",
+      "authenticity": {
+        "title": "保证真实性",
+        "description": "我们销售的每件产品都带有真实性保证。我们直接与授权经销商合作，并保持严格的质量控制，确保您只收到正品电子产品。"
+      },
+      "delivery": {
+        "title": "全国配送",
+        "description": "从伊斯兰堡到卡拉奇，拉合尔到白沙瓦 - 我们通过我们可靠的物流网络在巴基斯坦各地配送。快速、安全、可追踪的配送服务直达您的门口。"
+      },
+      "support": {
+        "title": "本地支持",
+        "description": "我们的巴基斯坦客户支持团队理解您的需求并说您的语言。在乌尔都语、英语或旁遮普语中获得帮助 - 我们在这里协助您的每一步。"
+      },
+      "prices": {
+        "title": "最佳价格",
+        "description": "我们直接与供应商谈判以提供有竞争力的价格。定期销售、学生折扣和批量购买选项确保您获得最佳的性价比。"
+      },
+      "afterSales": {
+        "title": "售后服务",
+        "description": "我们的关系不会在交付时结束。我们通过我们认证的服务中心提供全面的保修支持、维修服务和技术协助。"
+      },
+      "technology": {
+        "title": "最新技术",
+        "description": "通过最新的小工具和电子产品保持领先。我们不断更新我们的库存，提供来自领先国际和本地品牌的前沿产品。"
+      }
+    },
+    "impact": {
+      "title": "我们的数字影响",
+      "ordersDelivered": "已交付订单",
+      "happyCustomers": "满意客户",
+      "productVarieties": "产品种类",
+      "citiesCovered": "覆盖城市",
+      "customerSupport": "客户支持",
+      "customerSatisfaction": "客户满意度"
+    },
+    "whatWeOffer": {
+      "title": "我们提供什么",
+      "intro": "我们广泛的电子产品目录涵盖您在当今数字世界中保持连接、娱乐和高效所需的一切：",
+      "mobilePhones": "手机和配件：来自三星、苹果、华为、小米、Oppo、Vivo以及QMobile等本地品牌的最新智能手机。完整的保护套、充电器、移动电源和移动配件系列。",
+      "computers": "电脑和笔记本电脑：游戏笔记本电脑、商务笔记本电脑、台式电脑、平板电脑和所有电脑配件。我们库存HP、Dell、Lenovo、Acer和Asus的产品，并提供本地保修支持。",
+      "appliances": "家用电器：来自海尔、PEL、Dawlance、三星和LG等值得信赖品牌的智能电视、冰箱、洗衣机、空调、厨房电器。",
+      "gaming": "游戏和娱乐：游戏机、游戏配件、耳机、扬声器、家庭影院系统和流媒体设备，为您提供终极娱乐体验。",
+      "smartHome": "智能家居和物联网：智能扬声器、安全摄像头、智能灯泡、家庭自动化设备以及创建互联家庭所需的一切。"
+    },
+    "team": {
+      "title": "我们的团队",
+      "paragraph1": "在TechHive 巴基斯坦背后，是一个致力于技术爱好者、客户服务专家和物流专业人士的团队，他们有一个共同目标：让技术为每个巴基斯坦家庭所及。",
+      "paragraph2": "我们的团队包括经验丰富的电子工程师，他们策划我们的产品选择，确保每件商品都符合我们的质量标准。我们的客户服务代表不仅在产品知识方面受过培训，还了解不同地区和背景的巴基斯坦消费者的多样化需求。",
+      "paragraph3": "从我们在拉瓦尔品第仔细包装每个订单的仓库员工，到确保安全到达的全国配送合作伙伴，每个团队成员都在您的购物体验中发挥着关键作用。",
+      "paragraph4": "我们为成为一家巴基斯坦公司而感到自豪，雇用本地人才并为该国不断发展的电子商务生态系统做出贡献。我们的团队反映了巴基斯坦的多样性 - 我们有来自旁遮普、信德、开伯尔-普赫图赫瓦、俾路支和克什米尔的员工，带来独特的观点和地区洞察力，更好地服务我们的客户。"
+    },
+    "commitment": {
+      "title": "我们对巴基斯坦的承诺",
+      "paragraph1": "作为一家巴基斯坦公司，我们致力于为我们国家的数字化转型做出贡献。我们相信，获得优质电子产品的机会不应受到地理或经济障碍的限制。",
+      "paragraph2": "我们通过尽可能与巴基斯坦供应商合作来支持本地企业，在技术部门提供就业机会，并为巴基斯坦电子商务基础设施的发展做出贡献。",
+      "paragraph3": "我们的愿景超越了仅仅销售电子产品 - 我们希望成为巴基斯坦走向成为数字赋权国家之旅的一部分，在那里技术增强生活的每个方面。",
+      "cta": "放心购物"
+    },
+    "contact": {
+      "title": "联系我们",
+      "intro": "我们很乐意听到您的声音！通过以下任何渠道联系我们：",
+      "headOffice": "总部",
+      "customerSupport": "客户支持",
+      "emailUs": "给我们发邮件",
+      "businessHours": "营业时间",
+      "address": "商业市场，萨达尔<br />拉瓦尔品第，旁遮普<br />巴基斯坦",
+      "phone": "+92-51-XXXXXXX<br />24/7可用<br />乌尔都语和英语支持",
+      "emails": "support@TechHivepk.com<br />sales@TechHivepk.com<br />info@TechHivepk.com",
+      "hours": "周一 - 周六：上午9点 - 晚上9点<br />周日：上午10点 - 下午6点<br />在线：24/7"
+    }
+  },
+  "faq": {
+    "title": "常见问题",
+    "subtitle": "查找关于我们产品、服务和政策的常见问题的答案",
+    "searchPlaceholder": "搜索常见问题...",
+    "categories": {
+      "all": "所有类别",
+      "shipping": "🚚 配送和交付",
+      "returns": "🔄 退货和退款",
+      "orders": "📦 订单",
+      "products": "🔌 产品",
+      "account": "👤 账户",
+      "payments": "💳 支付"
+    },
+    "questions": {
+      "shippingTime": {
+        "question": "标准配送需要多长时间？",
+        "answer": "标准配送通常在巴基斯坦境内需要3-5个工作日。对于国际订单，交付时间根据目的地不同在7-14个工作日之间变化。",
+        "links": [
+          { "text": "查看配送费率", "url": "/shipping" },
+          { "text": "跟踪您的订单", "url": "/track-order" }
+        ]
+      },
+      "returns": {
+        "question": "如果我改变主意，可以退货吗？",
+        "answer": "是的，我们为大多数商品提供30天退货政策。商品必须未使用，在原始包装中且所有标签都附上。电子产品和个护用品有一些例外。",
+        "links": [
+          { "text": "退货政策详情", "url": "/returns" },
+          { "text": "开始退货", "url": "/start-return" }
+        ]
+      },
+      "trackOrder": {
+        "question": "如何跟踪我的订单？",
+        "answer": "一旦您的订单发货，您将通过电子邮件收到跟踪号码。您可以在我们的'跟踪订单'页面或直接在快递公司网站上输入此号码以获得实时更新。",
+        "links": [
+          { "text": "跟踪您的订单", "url": "/track-order" }
+        ]
+      },
+      "authenticity": {
+        "question": "您的产品是正品/原装吗？",
+        "answer": "绝对！我们从授权经销商和制造商直接采购所有产品。每件商品都带有官方保修和真实性保证。"
+      },
+      "paymentMethods": {
+        "question": "您接受哪些支付方式？",
+        "answer": "我们接受所有主要信用卡/借记卡（Visa、MasterCard）、银行转账、货到付款（巴基斯坦境内）以及JazzCash和EasyPaisa等流行的数字钱包。"
+      },
+      "resetPassword": {
+        "question": "如何重置我的账户密码？",
+        "answer": "访问登录页面并点击'忘记密码'。输入您注册的电子邮件地址以接收密码重置链接。出于安全考虑，链接在24小时后过期。",
+        "links": [
+          { "text": "密码重置页面", "url": "/reset-password" }
+        ]
+      },
+      "internationalShipping": {
+        "question": "您提供国际配送吗？",
+        "answer": "是的，我们向全球50多个国家配送。配送成本和交付时间因目的地而异。您将在付款前的结账时看到计算的配送成本。",
+        "links": [
+          { "text": "国际配送信息", "url": "/international-shipping" }
+        ]
+      },
+      "warranty": {
+        "question": "您的保修政策是什么？",
+        "answer": "大多数电子产品都带有1年制造商保修。保修索赔必须包括购买证明。某些商品在结账时有延长保修选项。",
+        "links": [
+          { "text": "保修信息", "url": "/warranty" }
+        ]
+      }
+    },
+    "noResults": "未找到匹配您搜索的常见问题。尝试不同的关键词或类别。",
+    "resetFilters": "重置过滤器",
+    "support": {
+      "title": "还有问题吗？",
+      "subtitle": "我们的客户支持团队随时准备帮助",
+      "contactSupport": "联系支持",
+      "callNow": "立即致电：+92-51-XXXXXXX"
+    }
+  },
+  "returnsPolicy": {
+    "title": "退货和退款政策",
+    "subtitle": "我们无忧的退货流程确保您对每次购买的完全满意",
+    "policy": {
+      "title": "我们的退货政策",
+      "paragraph1": "在TechHive 巴基斯坦，我们支持我们产品的质量。如果您对购买不完全满意，我们为大多数商品提供30天退货政策。",
+      "paragraph2": "我们的政策设计简单且客户友好。无论您收到有缺陷的产品、改变主意还是订购了错误的商品，我们都会与您合作使其正确。",
+      "highlights": {
+        "title": "政策要点：",
+        "items": [
+          "大多数产品30天退货窗口",
+          "有缺陷或错误商品免费退货",
+          "全额退款或换货选项",
+          "专用退货门户便于处理",
+          "退款处理平均3-5个工作日"
+        ]
+      }
+    },
+    "process": {
+      "title": "如何退货",
+      "steps": {
+        "initiate": {
+          "title": "启动您的退货",
+          "description": "登录您的账户并访问我们的退货中心或联系我们的客户服务团队开始您的退货。"
+        },
+        "package": {
+          "title": "包装您的商品",
+          "description": "安全地将商品包装在其原始包装中，包括所有配件，并包含退货授权表。"
+        },
+        "ship": {
+          "title": "寄回",
+          "description": "使用预付退货标签（如果适用）或寄送到我们的退货中心。我们建议使用可跟踪的服务。"
+        },
+        "refund": {
+          "title": "收到退款",
+          "description": "收到并检查后，我们将在3-5个工作日内将您的退款处理到原始支付方式。"
+        }
+      }
+    },
+    "conditions": {
+      "title": "条件和例外",
+      "intro": "要符合退货条件，您的商品必须与您收到时的状态相同，原始包装和标签都附上。某些商品有特殊的退货条件：",
+      "categories": {
+        "electronics": {
+          "title": "电子产品",
+          "description": "必须在15天内退回。工厂密封必须完好。可能适用重新入库费。"
+        },
+        "software": {
+          "title": "软件和媒体",
+          "description": "仅在未开封时符合条件。下载或激活的产品不可退货。"
+        },
+        "personalCare": {
+          "title": "个护用品",
+          "description": "出于卫生原因不可退货，除非有缺陷。"
+        },
+        "customOrders": {
+          "title": "定制订单",
+          "description": "最终销售 - 除非有缺陷，否则不符合退货条件。"
+        }
+      },
+      "notice": "注意：我们保留拒绝不符合我们政策条件或显示滥用迹象的退货的权利。"
+    },
+    "faq": {
+      "title": "退货常见问题",
+      "questions": {
+        "refundTime": {
+          "question": "处理我的退款需要多长时间？",
+          "answer": "一旦我们收到您的退货，退款通常在3-5个工作日内处理。信用出现在您账户中的时间取决于您的银行或发卡机构。"
+        },
+        "damaged": {
+          "question": "如果我的商品损坏或有缺陷怎么办？",
+          "answer": "我们将承担退货运费并处理全额退款或更换。请立即联系我们并包含损坏的照片。"
+        },
+        "exchange": {
+          "question": "我可以换货而不是退货吗？",
+          "answer": "是的！访问我们的退货中心请求换货。如果新商品成本更高，您只需支付差额。"
+        },
+        "shipping": {
+          "question": "谁支付退货运费？",
+          "answer": "我们为有缺陷/错误商品提供免费退货标签。对于其他退货，客户负责退货运费，除非您在结账时选择了我们的高级保护。"
+        }
+      },
+      "cta": "需要帮助？联系我们"
+    }
+  },
+  "helpCenter": {
+    "title": "帮助中心",
+    "subtitle": "查找所有技术需求的答案、指南和故障排除提示",
+    "searchPlaceholder": "搜索帮助文章、指南和视频...",
+    "categories": {
+      "title": "按类别浏览",
+      "all": "所有资源",
+      "setup": "设置指南",
+      "troubleshooting": "故障排除",
+      "maintenance": "维护",
+      "warranty": "保修信息",
+      "returns": "退货"
+    },
+    "resources": {
+      "title": "所有资源",
+      "setupTitle": "设置指南资源",
+      "troubleshootingTitle": "故障排除资源",
+      "maintenanceTitle": "维护资源",
+      "warrantyTitle": "保修信息资源",
+      "returnsTitle": "退货资源",
+      "noResults": "未找到匹配您搜索的资源。尝试不同的关键词或类别。",
+      "viewGuide": "查看指南",
+      "viewVideo": "查看视频",
+      "viewArticle": "查看文章"
+    },
+    "support": {
+      "title": "还需要帮助？",
+      "liveChat": {
+        "title": "在线聊天",
+        "description": "立即与我们的支持团队联系",
+        "action": "开始聊天"
+      },
+      "phoneSupport": {
+        "title": "电话支持",
+        "description": "致电我们：+92-51-XXXXXXX",
+        "action": "立即致电"
+      },
+      "submitTicket": {
+        "title": "提交工单",
+        "description": "我们将在24小时内回复",
+        "action": "创建工单"
+      }
+    },
+    "articles": {
+      "smartphoneSetup": "如何设置您的智能手机",
+      "wifiTroubleshooting": "Wi-Fi连接问题故障排除",
+      "laptopBatteryCare": "笔记本电脑电池护理指南",
+      "warrantyClaim": "如何申请保修",
+      "bluetoothSetup": "连接蓝牙设备",
+      "returnPolicies": "了解退货政策"
+    }
+  },
+  "message": {
+    "emptyChat": {
+      "icon": "💬",
+      "text": "选择一个用户开始聊天"
+    },
+    "chatHeader": {
+      "online": "在线",
+      "offline": "离线",
+      "typing": "正在输入..."
+    },
+    "loading": {
+      "spinner": "加载中...",
+      "messages": "正在加载消息..."
+    },
+    "emptyMessages": {
+      "icon": "✉️",
+      "text": "暂无消息",
+      "subtext": "向{{userName}}发送您的第一条消息"
+    },
+    "messageBubble": {
+      "you": "(您)",
+      "timeFormat": "h:mm a"
+    },
+    "input": {
+      "placeholder": "给{{userName}}发消息...",
+      "sendButton": "发送消息"
+    },
+    "errors": {
+      "fetchMessages": "加载消息时出错:",
+      "sendMessage": "发送消息时出错:"
+    }
+  },
+  "chatPage": {
+    "accessDenied": "只有登录用户才能访问此页面。",
+    "loading": "正在加载用户...",
+    "sidebar": {
+      "users": "用户",
+      "customerSupport": "客户支持",
+      "noUsers": "未找到用户。"
+    },
+    "chatArea": {
+      "selectUser": "选择一个用户开始聊天"
+    },
+    "mobile": {
+      "toggleButton": "切换侧边栏"
+    }
+  }
+}

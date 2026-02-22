@@ -1,0 +1,768 @@
+{
+  "navbar": {
+    "home": "Home",
+    "products": "Products",
+    "trackOrder": "Track Order",
+    "contact": "Contact",
+    "about": "About Us",
+    "cart": "Cart",
+    "adminDashboard": "Admin Dashboard",
+    "customerSupport": "Customer Support"
+
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "logout": "Log Out"
+  },
+"cart": {
+  "addToCart": "Add to Cart",
+  "removeFromCart": "Remove from Cart",
+  "item": "Item",
+  "items": "Items",
+  "quantity": "Quantity",
+  "increase": "Increase",
+  "decrease": "Decrease",
+  "checkout": "Proceed to Checkout",
+  "emptyCart": "Your cart is currently empty.",
+  "title": "Shopping Cart",
+  "price": "Price",
+  "inStock": "In Stock",
+  "delete": "Delete",
+  "subtotal": "Subtotal",
+  "shopDeals": "Shop today's deals",
+  "cartCleared": "Cart cleared",
+  "itemRemoved": "Item removed from cart",
+  "quantityIncreased": "Quantity increased",
+  "quantityDecreased": "Quantity decreased",
+  "cartEmptyError": "Your cart is empty!"
+},
+  "order": {
+    "trackYourOrder": "Track Your Order",
+    "orderNow": "Order Now",
+    "orderId": "Order ID",
+    "status": "Status",
+    "pending": "Pending",
+    "shipped": "Shipped",
+    "delivered": "Delivered"
+  },
+   "orderSummary": {
+    "loading": "Loading your order details...",
+    "noOrder": "No order found.",
+    "loadError": "Could not load order details.",
+    "trackingCopied": "Tracking number copied!",
+    "thankYou": "Thank you for your order!",
+    "confirmationSent": "We've sent a confirmation email with your order details.",
+    "orderSummary": "Order Summary",
+    "orderDetails": "Order Details",
+    "status": "Order Status",
+    "orderNumber": "Order Number",
+    "trackingNumber": "Tracking Number",
+    "copy": "Copy",
+    "estDelivery": "Est. Delivery",
+    "deliveryTime": "3-5 business days",
+    "paymentSummary": "Payment Summary",
+    "totalAmount": "Total Amount",
+    "orderItems": "Order Items",
+    "quantity": "Quantity",
+    "continueShopping": "Continue Shopping",
+    "trackOrder": "Track Your Order"
+  },
+
+"trackOrder": {
+    "title": "Track Your Order",
+    "subtitle": "Enter your tracking number below to check your order status",
+    "placeholder": "Enter your tracking number (e.g. TH-12345678)",
+    "button": "Track Order",
+    "tracking": "Tracking...",
+    "success": "Order found!",
+    "order": "Order",
+    "errors": {
+      "noTracking": "Please enter a tracking number!",
+      "notFound": "Order not found or invalid tracking number."
+    },
+    "steps": {
+      "placed": "Order Placed",
+      "confirmed": "Confirmed",
+      "shipped": "Shipped",
+      "delivered": "Delivered"
+    },
+    "trackingNumber": "Tracking Number",
+    "deliveredOn": "Delivered On",
+    "cancelledOn": "Cancelled On",
+    "estimatedDelivery": "Estimated Delivery",
+    "expectedDelivery": "Expected Delivery",
+    "defaultDelivery": "3-5 business days",
+    "delayedDateNote": "Delayed - New date will be updated soon",
+    "delayedMessage": "Your order has been delayed. We're working to get it to you as soon as possible.",
+    "cancelledMessage": "Your order has been cancelled. Please contact support if you have any questions.",
+    "delayedApology": "Your order is delayed. We apologize for the inconvenience.",
+    "cancelledNote": "This order has been cancelled."
+  },
+
+  "product": {
+  "price": "Price",
+  "inStock": "In Stock",
+  "unavailable": "Currently Unavailable",
+  "category": "Category",
+  "addToCart": "Add to Cart",
+  "outOfStock": "Out of Stock"
+},
+
+  "toasts": {
+    "addedToCart": "Item added to cart successfully!",
+    "removedFromCart": "Item removed from cart.",
+    "error": "Something went wrong. Please try again."
+  },
+  "footer": {
+    "logo": "🛒 TechHive Pakistan",
+    "description": "Your trusted electronics partner in Pakistan. Fast delivery, secure payment, and customer-first service since 2018.",
+    "quickLinks": "Quick Links",
+    "home": "Home",
+    "products": "Products",
+    "aboutUs": "About Us",
+    "support": "Support",
+    "faq": "FAQ",
+    "returnsPolicy": "Returns Policy",
+    "helpCenter": "Help Center",
+    "contactUs": "Contact Us",
+    "phone": "+92 51 1234567",
+    "email": "support@techhivepk.com",
+    "address": "Commercial Market, Rawalpindi, Pakistan",
+    "copyright": "© {{year}} TechHive Pakistan. All rights reserved.",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service"
+  },
+  "shipping": {
+    "title": "Add Shipping Information",
+    "fullName": "Full Name",
+    "address": "Address",
+    "city": "City",
+    "postalCode": "Postal Code",
+    "country": "Country",
+    "button": "Save Shipping Information",
+    "saving": "Saving...",
+    "successMessage": "Shipping saved! Redirecting to order page in 1 second...",
+    "selectShippingAddress": "Select a shipping address",
+    "selectedShippingAddress": "Selected shipping address",
+    "selectedAddress": "Selected",
+    "placeholder": {
+      "fullName": "Enter your full name",
+      "address": "Enter your address",
+      "city": "Enter your city",
+      "postalCode": "Enter postal code",
+      "country": "Enter your country"
+    }
+  },
+  "forgotPassword": {
+    "title": "Forgot Password",
+    "emailPlaceholder": "Enter your email",
+    "button": "Send Reset Link",
+    "success": "Reset link sent to {{email}}",
+    "error": "Error: {{message}}"
+  },
+  "signIn": {
+    "title": "Sign In to TechHive",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "button": "Sign In",
+    "google": "Sign In with Google",
+    "or": "OR",
+    "forgotPassword": "Forgot password?",
+    "newUser": "New to TechHive?",
+    "linkToSignUp": "Sign Up",
+    "errors": {
+      "invalid": "Password or email is incorrect",
+      "unsuccessful": "Sign In unsuccessful"
+    },
+    "success": "Welcome back!"
+  },
+  "signUp": {
+    "title": "Create an Account",
+    "namePlaceholder": "Full Name",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password (min 6 characters)",
+    "button": "Sign Up",
+    "google": "Sign Up with Google",
+    "or": "OR",
+    "errors": {
+      "required": "Please fill in all fields.",
+      "shortPassword": "Password must be at least 6 characters long.",
+      "emailUsed": "Email is already in use.",
+      "failed": "Registration failed: {{message}}"
+    },
+    "success": "Account created! Welcome aboard 🎉",
+    "googleSuccess": "Signed up with Google successfully!",
+    "googleFailed": "Google sign-up failed: {{message}}"
+  },
+  "signOut": {
+    "success": "User signed out successfully",
+    "error": "Error signing out: {{message}}"
+  },
+  "about": {
+    "title": "About TechHive Pakistan",
+    "subtitle": "Your Trusted Electronics Partner in Rawalpindi, Connecting Technology with Pakistani Homes Since 2024",
+    "ourStory": {
+      "title": "Our Story",
+      "paragraph1": "Founded in the heart of Rawalpindi, Pakistan in 2024, TechHive Pakistan began as a dream to bridge the gap between cutting-edge technology and everyday Pakistani consumers. What started as a small electronics shop in Commercial Market has evolved into one of Pakistan's most trusted online electronics retailers.",
+      "paragraph2": "Our journey began when our founder, a software engineer from Iqra University Islamabad, noticed the challenges Pakistani consumers faced when trying to access genuine, high-quality electronics at fair prices. Long queues at physical stores, limited product availability, concerns about authenticity, and lack of proper after-sales support were common frustrations.",
+      "paragraph3": "We recognized that Pakistan's growing digital landscape needed a reliable electronics partner – one that understood local needs, offered genuine products, provided excellent customer service in both Urdu and English, and delivered across the country with care and precision.",
+      "paragraph4": "Today, from our headquarters in Rawalpindi and our fulfillment centers across Punjab, we serve customers from Karachi to Gilgit, from Lahore to Quetta. We've successfully delivered over 50,000 orders and built a community of satisfied customers who trust us with their technology needs."
+    },
+    "coreValues": {
+      "title": "Our Core Values",
+      "authenticity": {
+        "title": "Authenticity Guaranteed",
+        "description": "Every product we sell comes with a guarantee of authenticity. We work directly with authorized distributors and maintain strict quality control to ensure you receive only genuine electronics."
+      },
+      "delivery": {
+        "title": "Nationwide Delivery",
+        "description": "From Islamabad to Karachi, Lahore to Peshawar - we deliver across Pakistan with our reliable logistics network. Fast, secure, and trackable delivery to your doorstep."
+      },
+      "support": {
+        "title": "Local Support",
+        "description": "Our Pakistani customer support team understands your needs and speaks your language. Get help in Urdu, English, or Punjabi - we're here to assist you every step of the way."
+      },
+      "prices": {
+        "title": "Best Prices",
+        "description": "We negotiate directly with suppliers to offer competitive prices. Regular sales, student discounts, and bulk purchase options ensure you get the best value for your money."
+      },
+      "afterSales": {
+        "title": "After-Sales Service",
+        "description": "Our relationship doesn't end at delivery. We provide comprehensive warranty support, repair services, and technical assistance through our certified service centers."
+      },
+      "technology": {
+        "title": "Latest Technology",
+        "description": "Stay ahead with the latest gadgets and electronics. We continuously update our inventory with cutting-edge products from leading international and local brands."
+      }
+    },
+    "impact": {
+      "title": "Our Impact in Numbers",
+      "ordersDelivered": "Orders Delivered",
+      "happyCustomers": "Happy Customers",
+      "productVarieties": "Product Varieties",
+      "citiesCovered": "Cities Covered",
+      "customerSupport": "Customer Support",
+      "customerSatisfaction": "Customer Satisfaction"
+    },
+    "whatWeOffer": {
+      "title": "What We Offer",
+      "intro": "Our extensive electronics catalog covers everything you need to stay connected, entertained, and productive in today's digital world:",
+      "mobilePhones": "Mobile Phones & Accessories: Latest smartphones from Samsung, Apple, Huawei, Xiaomi, Oppo, Vivo, and local brands like QMobile. Complete range of cases, chargers, power banks, and mobile accessories.",
+      "computers": "Computers & Laptops: Gaming laptops, business laptops, desktop computers, tablets, and all computer accessories. We stock products from HP, Dell, Lenovo, Acer, and Asus with local warranty support.",
+      "appliances": "Home Appliances: Smart TVs, refrigerators, washing machines, air conditioners, kitchen appliances from trusted brands like Haier, PEL, Dawlance, Samsung, and LG.",
+      "gaming": "Gaming & Entertainment: Gaming consoles, gaming accessories, headphones, speakers, home theater systems, and streaming devices for the ultimate entertainment experience.",
+      "smartHome": "Smart Home & IoT: Smart speakers, security cameras, smart bulbs, home automation devices, and everything you need to create a connected home."
+    },
+    "team": {
+      "title": "Our Team",
+      "paragraph1": "Behind TechHive Pakistan is a dedicated team of technology enthusiasts, customer service experts, and logistics professionals who share a common goal: making technology accessible to every Pakistani household.",
+      "paragraph2": "Our team includes experienced electronics engineers who curate our product selection, ensuring every item meets our quality standards. Our customer service representatives are trained not just in product knowledge but in understanding the diverse needs of Pakistani consumers across different regions and backgrounds.",
+      "paragraph3": "From our warehouse staff in Rawalpindi who carefully pack each order, to our delivery partners across the country who ensure safe arrival, every team member plays a crucial role in your shopping experience.",
+      "paragraph4": "We're proud to be a Pakistani company, employing local talent and contributing to the country's growing e-commerce ecosystem. Our team reflects the diversity of Pakistan - we have staff members from Punjab, Sindh, KPK, Balochistan, and Kashmir, bringing unique perspectives and regional insights to better serve our customers."
+    },
+    "commitment": {
+      "title": "Our Commitment to Pakistan",
+      "paragraph1": "As a Pakistani company, we're committed to contributing to our nation's digital transformation. We believe that access to quality electronics shouldn't be limited by geography or economic barriers.",
+      "paragraph2": "We support local businesses by partnering with Pakistani suppliers whenever possible, provide employment opportunities in the technology sector, and contribute to the development of e-commerce infrastructure in Pakistan.",
+      "paragraph3": "Our vision extends beyond just selling electronics - we want to be part of Pakistan's journey towards becoming a digitally empowered nation where technology enhances every aspect of life.",
+      "cta": "Shop with Confidence"
+    },
+    "contact": {
+      "title": "Get in Touch",
+      "intro": "We'd love to hear from you! Reach out to us through any of the following channels:",
+      "headOffice": "Head Office",
+      "customerSupport": "Customer Support",
+      "emailUs": "Email Us",
+      "businessHours": "Business Hours",
+      "address": "Commercial Market, Saddar<br />Rawalpindi, Punjab<br />Pakistan",
+      "phone": "+92-51-XXXXXXX<br />Available 24/7<br />Urdu & English Support",
+      "emails": "support@TechHivepk.com<br />sales@TechHivepk.com<br />info@TechHivepk.com",
+      "hours": "Monday - Saturday: 9 AM - 9 PM<br />Sunday: 10 AM - 6 PM<br />Online: 24/7"
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Find answers to common questions about our products, services, and policies",
+    "searchPlaceholder": "Search FAQs...",
+    "categories": {
+      "all": "All Categories",
+      "shipping": "🚚 Shipping & Delivery",
+      "returns": "🔄 Returns & Refunds",
+      "orders": "📦 Orders",
+      "products": "🔌 Products",
+      "account": "👤 Account",
+      "payments": "💳 Payments"
+    },
+    "questions": {
+      "shippingTime": {
+        "question": "How long does standard shipping take?",
+        "answer": "Standard shipping typically takes 3-5 business days within Pakistan. For international orders, delivery times vary between 7-14 business days depending on the destination.",
+        "links": [
+          { "text": "View shipping rates", "url": "/shipping" },
+          { "text": "Track your order", "url": "/track-order" }
+        ]
+      },
+      "returns": {
+        "question": "Can I return a product if I change my mind?",
+        "answer": "Yes, we offer a 30-day return policy for most items. The product must be unused, in its original packaging with all tags attached. Some exclusions apply for electronics and personal care items.",
+        "links": [
+          { "text": "Return policy details", "url": "/returns" },
+          { "text": "Start a return", "url": "/start-return" }
+        ]
+      },
+      "trackOrder": {
+        "question": "How do I track my order?",
+        "answer": "Once your order ships, you'll receive a tracking number via email. You can enter this number on our 'Track Order' page or directly on the courier's website for real-time updates.",
+        "links": [
+          { "text": "Track your order", "url": "/track-order" }
+        ]
+      },
+      "authenticity": {
+        "question": "Are your products genuine/original?",
+        "answer": "Absolutely! We source all products directly from authorized distributors and manufacturers. Every item comes with an official warranty and authenticity guarantee."
+      },
+      "paymentMethods": {
+        "question": "What payment methods do you accept?",
+        "answer": "We accept all major credit/debit cards (Visa, MasterCard), bank transfers, cash on delivery (within Pakistan), and popular digital wallets like JazzCash and EasyPaisa."
+      },
+      "resetPassword": {
+        "question": "How do I reset my account password?",
+        "answer": "Visit the login page and click 'Forgot Password'. Enter your registered email address to receive a password reset link. The link expires in 24 hours for security.",
+        "links": [
+          { "text": "Password reset page", "url": "/reset-password" }
+        ]
+      },
+      "internationalShipping": {
+        "question": "Do you offer international shipping?",
+        "answer": "Yes, we ship to over 50 countries worldwide. Shipping costs and delivery times vary by destination. You'll see calculated shipping costs at checkout before payment.",
+        "links": [
+          { "text": "International shipping info", "url": "/international-shipping" }
+        ]
+      },
+      "warranty": {
+        "question": "What's your warranty policy?",
+        "answer": "Most electronics come with a 1-year manufacturer warranty. Warranty claims must include proof of purchase. Some items have extended warranty options available at checkout.",
+        "links": [
+          { "text": "Warranty information", "url": "/warranty" }
+        ]
+      }
+    },
+    "noResults": "No FAQs found matching your search. Try different keywords or categories.",
+    "resetFilters": "Reset Filters",
+    "support": {
+      "title": "Still have questions?",
+      "subtitle": "Our customer support team is ready to help",
+      "contactSupport": "Contact Support",
+      "callNow": "Call Now: +92-51-XXXXXXX"
+    }
+  },
+  "returnsPolicy": {
+    "title": "Returns & Refunds Policy",
+    "subtitle": "Our hassle-free return process ensures your complete satisfaction with every purchase",
+    "policy": {
+      "title": "Our Return Policy",
+      "paragraph1": "At TechHive Pakistan, we stand behind the quality of our products. If you're not completely satisfied with your purchase, we offer a 30-day return policy for most items.",
+      "paragraph2": "Our policy is designed to be simple and customer-friendly. Whether you received a defective product, changed your mind, or ordered the wrong item, we'll work with you to make it right.",
+      "highlights": {
+        "title": "Key Policy Highlights:",
+        "items": [
+          "30-day return window for most products",
+          "Free returns for defective or incorrect items",
+          "Full refund or exchange options",
+          "Dedicated returns portal for easy processing",
+          "Average 3-5 business days for refund processing"
+        ]
+      }
+    },
+    "process": {
+      "title": "How to Return an Item",
+      "steps": {
+        "initiate": {
+          "title": "Initiate Your Return",
+          "description": "Log in to your account and visit our Returns Center or contact our customer service team to start your return."
+        },
+        "package": {
+          "title": "Package Your Item",
+          "description": "Securely pack the item in its original packaging with all accessories and include the return authorization form."
+        },
+        "ship": {
+          "title": "Ship It Back",
+          "description": "Use the prepaid return label (if applicable) or ship to our returns center. We recommend using a trackable service."
+        },
+        "refund": {
+          "title": "Receive Refund",
+          "description": "Once received and inspected, we'll process your refund to the original payment method within 3-5 business days."
+        }
+      }
+    },
+    "conditions": {
+      "title": "Conditions & Exceptions",
+      "intro": "To be eligible for a return, your item must be in the same condition you received it, with original packaging and tags attached. Some items have special return conditions:",
+      "categories": {
+        "electronics": {
+          "title": "Electronics",
+          "description": "Must be returned within 15 days. Factory seals must be intact. Restocking fee may apply."
+        },
+        "software": {
+          "title": "Software & Media",
+          "description": "Only eligible if unopened. No returns on downloaded or activated products."
+        },
+        "personalCare": {
+          "title": "Personal Care",
+          "description": "Non-returnable for hygiene reasons unless defective."
+        },
+        "customOrders": {
+          "title": "Custom Orders",
+          "description": "Final sale - not eligible for return unless defective."
+        }
+      },
+      "notice": "Note: We reserve the right to refuse returns that don't meet our policy conditions or show signs of misuse."
+    },
+    "faq": {
+      "title": "Returns FAQ",
+      "questions": {
+        "refundTime": {
+          "question": "How long does it take to process my refund?",
+          "answer": "Once we receive your return, refunds are typically processed within 3-5 business days. The time it takes for the credit to appear in your account depends on your bank or card issuer."
+        },
+        "damaged": {
+          "question": "What if my item is damaged or defective?",
+          "answer": "We'll cover return shipping and process a full refund or replacement. Please contact us immediately and include photos of the damage."
+        },
+        "exchange": {
+          "question": "Can I exchange an item instead of returning it?",
+          "answer": "Yes! Visit our Returns Center to request an exchange. You'll only pay the difference if the new item costs more."
+        },
+        "shipping": {
+          "question": "Who pays for return shipping?",
+          "answer": "We provide free return labels for defective/wrong items. For other returns, customers are responsible for return shipping unless you selected our Premium Protection at checkout."
+        }
+      },
+      "cta": "Need Help? Contact Us"
+    }
+  },
+  "helpCenter": {
+    "title": "Help Center",
+    "subtitle": "Find answers, guides, and troubleshooting tips for all your tech needs",
+    "searchPlaceholder": "Search help articles, guides, and videos...",
+    "categories": {
+      "title": "Browse by Category",
+      "all": "All Resources",
+      "setup": "Setup Guides",
+      "troubleshooting": "Troubleshooting",
+      "maintenance": "Maintenance",
+      "warranty": "Warranty Info",
+      "returns": "Returns"
+    },
+    "resources": {
+      "title": "All Resources",
+      "setupTitle": "Setup Guide Resources",
+      "troubleshootingTitle": "Troubleshooting Resources",
+      "maintenanceTitle": "Maintenance Resources",
+      "warrantyTitle": "Warranty Info Resources",
+      "returnsTitle": "Returns Resources",
+      "noResults": "No resources found matching your search. Try different keywords or categories.",
+      "viewGuide": "View Guide",
+      "viewVideo": "View Video",
+      "viewArticle": "View Article"
+    },
+    "support": {
+      "title": "Still Need Help?",
+      "liveChat": {
+        "title": "Live Chat",
+        "description": "Connect with our support team instantly",
+        "action": "Start Chat"
+      },
+      "phoneSupport": {
+        "title": "Phone Support",
+        "description": "Call us: +92-51-XXXXXXX",
+        "action": "Call Now"
+      },
+      "submitTicket": {
+        "title": "Submit Ticket",
+        "description": "We'll respond within 24 hours",
+        "action": "Create Ticket"
+      }
+    },
+    "articles": {
+      "smartphoneSetup": "How to Set Up Your Smartphone",
+      "wifiTroubleshooting": "Wi-Fi Connection Issues Troubleshooting",
+      "laptopBatteryCare": "Laptop Battery Care Guide",
+      "warrantyClaim": "How to File a Warranty Claim",
+      "bluetoothSetup": "Connecting Bluetooth Devices",
+      "returnPolicies": "Understanding Return Policies"
+    }
+  },
+  "privacyPolicy": {
+    "title": "Privacy Policy",
+    "subtitle": "Your privacy is our priority. Learn how we protect and handle your personal information",
+    "commitment": {
+      "title": "Our Privacy Commitment",
+      "intro": "At TechHive Pakistan, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you use our services.",
+      "transparency": "We believe in transparency and want you to understand exactly how your information is handled. This policy applies to all users of our website, mobile applications, and services.",
+      "principles": {
+        "title": "Key Privacy Principles:",
+        "items": [
+          "We only collect information necessary for our services",
+          "Your data is protected with industry-standard security",
+          "You have control over your personal information",
+          "We never sell your personal data to third parties",
+          "Transparent communication about data practices"
+        ]
+      }
+    },
+    "informationCollection": {
+      "title": "Information We Collect",
+      "personalInfo": {
+        "title": "Personal Information",
+        "description": "Name, email, phone number, shipping address, and payment information when you create an account or make a purchase."
+      },
+      "orderInfo": {
+        "title": "Order Information",
+        "description": "Purchase history, order details, product preferences, and customer service interactions to improve your experience."
+      },
+      "technicalData": {
+        "title": "Technical Data",
+        "description": "IP address, browser type, device information, and website usage patterns to enhance our services and security."
+      },
+      "cookies": {
+        "title": "Cookies & Tracking",
+        "description": "Essential cookies for functionality, analytics cookies for improvement, and preference cookies for personalization."
+      }
+    },
+    "howWeUse": {
+      "title": "How We Use Your Information",
+      "intro": "We use your information responsibly to provide and improve our services. Here's how we utilize your data:",
+      "orderProcessing": {
+        "title": "Order Processing",
+        "description": "Process payments, fulfill orders, send confirmations, and provide customer support for your purchases."
+      },
+      "accountManagement": {
+        "title": "Account Management",
+        "description": "Create and maintain your account, verify your identity, and manage your preferences and settings."
+      },
+      "serviceImprovement": {
+        "title": "Service Improvement",
+        "description": "Analyze usage patterns, improve our website, develop new features, and enhance user experience."
+      },
+      "communication": {
+        "title": "Communication",
+        "description": "Send order updates, respond to inquiries, provide support, and share relevant information with your consent."
+      },
+      "notice": "Note: We will never use your personal information for purposes other than those described in this policy without your explicit consent."
+    },
+    "dataProtection": {
+      "title": "Data Protection & Security",
+      "encryption": {
+        "title": "Encryption",
+        "description": "All data transmission is protected with SSL encryption, and sensitive information is encrypted at rest."
+      },
+      "accessControl": {
+        "title": "Access Control",
+        "description": "Limited access to personal data, regular security audits, and employee training on data protection."
+      },
+      "monitoring": {
+        "title": "Monitoring",
+        "description": "Continuous monitoring for suspicious activity, fraud prevention, and security incident response."
+      },
+      "compliance": {
+        "title": "Compliance",
+        "description": "Adherence to data protection laws, regular policy reviews, and updates to maintain compliance."
+      }
+    },
+    "yourRights": {
+      "title": "Your Privacy Rights",
+      "intro": "You have important rights regarding your personal information. We respect and support these rights:",
+      "rights": {
+        "title": "Your Rights Include:",
+        "access": "Access: Request a copy of your personal data",
+        "correction": "Correction: Update or correct inaccurate information",
+        "deletion": "Deletion: Request deletion of your data (with exceptions)",
+        "portability": "Portability: Receive your data in a portable format",
+        "optOut": "Opt-out: Unsubscribe from marketing communications",
+        "restriction": "Restriction: Limit how we process your data"
+      },
+      "contact": "To exercise any of these rights, please contact us using the information provided below. We will respond to your request within 30 days."
+    },
+    "faq": {
+      "title": "Privacy FAQ",
+      "sellData": {
+        "question": "Do you sell my personal information?",
+        "answer": "No, we never sell your personal information to third parties. We only share data with trusted service providers who help us operate our business, and only for the purposes described in this policy."
+      },
+      "dataRetention": {
+        "question": "How long do you keep my data?",
+        "answer": "We retain your information for as long as necessary to provide our services, comply with legal obligations, resolve disputes, and enforce our agreements. When we no longer need your data, we securely delete or anonymize it."
+      },
+      "cookies": {
+        "question": "Can I control cookie settings?",
+        "answer": "Yes! You can control cookies through your browser settings. However, disabling certain cookies may affect website functionality. We use cookies to enhance your experience and improve our services."
+      },
+      "dataBreach": {
+        "question": "What if there's a data breach?",
+        "answer": "In the unlikely event of a data breach, we will notify affected users within 72 hours as required by law. We have incident response procedures in place to minimize any potential impact."
+      }
+    },
+    "contact": "Questions? Contact Our Privacy Team"
+  },
+  "termsOfService": {
+    "title": "Terms of Service",
+    "subtitle": "Your trusted technology partner. Learn about our terms and conditions",
+    "overview": {
+      "title": "Our Terms & Conditions",
+      "intro": "Welcome to TechHive Pakistan! These Terms of Service govern your use of our website, mobile applications, and services. By accessing or using our platform, you agree to be bound by these terms.",
+      "commitment": "We're committed to providing you with the best technology shopping experience while ensuring fair and transparent terms for all users. Please read these terms carefully before using our services.",
+      "highlights": {
+        "title": "Key Terms Highlights:",
+        "items": [
+          "Clear and transparent service terms",
+          "Fair pricing and payment policies",
+          "Comprehensive return and refund rights",
+          "User-friendly account management",
+          "Strong data protection and privacy"
+        ]
+      }
+    },
+    "services": {
+      "title": "Our Services",
+      "onlineShopping": {
+        "title": "Online Shopping",
+        "description": "Browse and purchase technology products with secure payment processing and fast delivery options."
+      },
+      "mobileExperience": {
+        "title": "Mobile Experience",
+        "description": "Access our services through mobile applications with optimized user experience and features."
+      },
+      "easyReturns": {
+        "title": "Easy Returns",
+        "description": "Hassle-free return process with 30-day window and multiple refund options for your convenience."
+      },
+      "customerSupport": {
+        "title": "Customer Support",
+        "description": "24/7 customer service with multiple contact channels and dedicated support team."
+      }
+    },
+    "userResponsibilities": {
+      "title": "User Responsibilities",
+      "intro": "As a user of TechHive, you have certain responsibilities to ensure a safe and enjoyable experience for everyone:",
+      "accountSecurity": {
+        "title": "Account Security",
+        "description": "Maintain the confidentiality of your account credentials and notify us immediately of any unauthorized access."
+      },
+      "accurateInformation": {
+        "title": "Accurate Information",
+        "description": "Provide accurate and up-to-date personal information for orders, payments, and account management."
+      },
+      "legalCompliance": {
+        "title": "Legal Compliance",
+        "description": "Use our services in compliance with applicable laws and regulations in your jurisdiction."
+      },
+      "respectfulBehavior": {
+        "title": "Respectful Behavior",
+        "description": "Treat our staff and other users with respect and avoid any form of harassment or abuse."
+      },
+      "notice": "Note: Violation of these responsibilities may result in account suspension or termination of services."
+    },
+    "ordersPayments": {
+      "title": "Orders & Payments",
+      "orderProcess": {
+        "title": "Order Process",
+        "description": "Place orders through our secure platform with real-time inventory checking and order confirmation."
+      },
+      "paymentMethods": {
+        "title": "Payment Methods",
+        "description": "Multiple secure payment options including credit cards, digital wallets, and bank transfers."
+      },
+      "shippingDelivery": {
+        "title": "Shipping & Delivery",
+        "description": "Fast and reliable delivery with tracking options and multiple shipping methods available."
+      },
+      "orderConfirmation": {
+        "title": "Order Confirmation",
+        "description": "Immediate order confirmation with detailed receipts and shipping information sent to your email."
+      }
+    },
+    "prohibitedActivities": {
+      "title": "Prohibited Activities",
+      "intro": "To maintain a safe and fair environment, certain activities are strictly prohibited on our platform:",
+      "activities": {
+        "title": "Activities Not Allowed:",
+        "fraudulent": "Fraudulent Activities: Creating fake accounts, using stolen payment methods",
+        "intellectualProperty": "Intellectual Property Violations: Infringing on copyrights, trademarks, or patents",
+        "systemAbuse": "System Abuse: Attempting to hack, disrupt, or overload our systems",
+        "harassment": "Harassment: Bullying, threatening, or harassing other users or staff",
+        "illegalActivities": "Illegal Activities: Using our services for any unlawful purposes",
+        "spam": "Spam: Sending unsolicited messages or creating fake reviews"
+      },
+      "enforcement": "We reserve the right to investigate and take appropriate action against any violations, including account suspension or legal action."
+    },
+    "faq": {
+      "title": "Terms FAQ",
+      "cancelOrder": {
+        "question": "Can I cancel my order after placing it?",
+        "answer": "Yes, you can cancel your order within 2 hours of placement if it hasn't been processed for shipping. Contact our customer service team immediately for assistance."
+      },
+      "defectiveProduct": {
+        "question": "What happens if I receive a defective product?",
+        "answer": "We offer a 30-day return policy for defective items. Contact us immediately, and we'll provide a prepaid return label and process a full refund or replacement."
+      },
+      "ageRestrictions": {
+        "question": "Are there any age restrictions for using TechHive?",
+        "answer": "You must be at least 18 years old to create an account and make purchases. Users under 18 must have parental consent and supervision."
+      },
+      "updateAccount": {
+        "question": "How do I update my account information?",
+        "answer": "You can update your account information anytime through your account settings. For security reasons, some changes may require verification."
+      }
+    },
+    "contact": "Need Help? Contact Our Legal Team"
+  },
+  "message": {
+    "emptyChat": {
+      "icon": "💬",
+      "text": "Select a user to start chatting"
+    },
+    "chatHeader": {
+      "online": "Online",
+      "offline": "Offline",
+      "typing": "Typing..."
+    },
+    "loading": {
+      "spinner": "Loading...",
+      "messages": "Loading messages..."
+    },
+    "emptyMessages": {
+      "icon": "✉️",
+      "text": "No messages yet",
+      "subtext": "Send your first message to {{userName}}"
+    },
+    "messageBubble": {
+      "you": "(You)",
+      "timeFormat": "h:mm a"
+    },
+    "input": {
+      "placeholder": "Message {{userName}}...",
+      "sendButton": "Send message"
+    },
+    "errors": {
+      "fetchMessages": "Error fetching messages:",
+      "sendMessage": "Error sending message:"
+    }
+  },
+  "chatPage": {
+    "accessDenied": "Only logged-in users can access this page.",
+    "loading": "Loading users...",
+    "sidebar": {
+      "users": "Users",
+      "customerSupport": "Customer Support",
+      "noUsers": "No users found."
+    },
+    "chatArea": {
+      "selectUser": "Select a user to start chatting"
+    },
+    "mobile": {
+      "toggleButton": "Toggle sidebar"
+    }
+  }
+}
